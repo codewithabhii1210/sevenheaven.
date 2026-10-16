@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import helmet from 'helmet'
-import mongoSanitize from 'express-mongo-sanitize'
+import { mongoSanitize } from './middleware/mongoSanitize.js'
 import hpp from 'hpp'
 import cookieParser from 'cookie-parser'
 import morgan from 'morgan'
@@ -112,7 +112,7 @@ app.use(express.urlencoded({ extended: true, limit: '50kb' }))
 app.use(cookieParser())
 
 // Data sanitization against NoSQL query injection (strips `$` and `.`)
-app.use(mongoSanitize())
+app.use(mongoSanitize)
 
 // Prevent HTTP Parameter Pollution (HPP)
 app.use(hpp())
