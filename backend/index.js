@@ -117,6 +117,17 @@ app.use(mongoSanitize)
 // Prevent HTTP Parameter Pollution (HPP)
 app.use(hpp())
 
+// Ensure DB connected on incoming requests (serverless / traditional)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB()
+    next()
+  } catch (err) {
+    console.error('[DB CONNECT ERROR]:', err.message)
+    res.status(500).json({ error: 'Database service unavailable' })
+  }
+})
+
 // Apply general API rate limiting to all endpoints
 app.use('/api', apiLimiter)
 
@@ -185,6 +196,9 @@ async function startServer() {
   }
 }
 
-startServer()
+// Only listen on port if not in serverless environment (Vercel handles HTTP server)
+if (!process.env.VERCEL) {
+  startServer()
+}
 
 export default app

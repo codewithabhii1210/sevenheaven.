@@ -4,6 +4,8 @@ import { coupons as localCoupons, findCoupon as localFindCoupon } from '../data/
 const envApiUrl =
   typeof import.meta !== 'undefined' && import.meta?.env?.VITE_API_URL
     ? import.meta.env.VITE_API_URL
+    : typeof window !== 'undefined' && window.location?.hostname !== 'localhost'
+    ? ''
     : typeof process !== 'undefined' && process?.env?.VITE_API_URL
     ? process.env.VITE_API_URL
     : 'http://localhost:5000'
