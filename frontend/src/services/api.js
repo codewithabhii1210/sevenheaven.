@@ -1,10 +1,18 @@
 import { products as localProducts } from '../data/products.js'
 import { coupons as localCoupons, findCoupon as localFindCoupon } from '../data/coupons.js'
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '')
+const envApiUrl =
+  typeof import.meta !== 'undefined' && import.meta?.env?.VITE_API_URL
+    ? import.meta.env.VITE_API_URL
+    : typeof process !== 'undefined' && process?.env?.VITE_API_URL
+    ? process.env.VITE_API_URL
+    : 'http://localhost:5000'
+
+const API_BASE = envApiUrl.replace(/\/$/, '')
 
 // Helper to get stored auth token
 function getAuthHeader() {
+  if (typeof localStorage === 'undefined') return {}
   const token = localStorage.getItem('sh7_token')
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
