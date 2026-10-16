@@ -424,31 +424,40 @@ Order summary flow: `Subtotal → Coupon discount → Shipping (free if ₹499+ 
 |---|---|---|
 | P0 | Repo + Vite/React scaffold + routing + tokens | ✅ `5d5ed1f` |
 | P1 | Detailed README — architecture, data, coupons | ✅ `a3ea2be` |
-| P1.5 | Pricing confirm + **sab images/data local save** + decisions update | ✅ this commit |
-| P2 | Design system: 7H SVG logo, header/ticker/footer, buttons/cards | ⬜ |
-| P3 | Home page (hero, featured, offer, teaser, pillars, newsletter) | ⬜ |
-| P4 | Shop + filters/search + Product detail + categories | ⬜ |
-| P5 | Cart + Wishlist + Coupon engine (localStorage) | ⬜ |
-| P6 | **Node+Express API** (auth JWT, products, orders) + MongoDB Atlas connect + seed | ⬜ (Atlas account pending) |
-| P7 | Account pages + Checkout: **COD first** → Razorpay (test→live) | ⬜ |
-| P8 | Admin panel (products/orders/coupons/messages) | ⬜ |
-| P9 | हिं/EN switcher + SEO + legal + 404 | ⬜ |
-| P10 | Hostinger deploy + `.htaccess` + domain live | ⬜ |
-
-**Commit rule:** har change → `git add -A` + descriptive commit + `git push origin main`
-Format: `feat: ...`, `fix: ...`, `style: ...`, `docs: ...`, `chore: ...`
+| P1.5 | Pricing confirm + **sab images/data local save** + confirmed rules | ✅ `1d4e11f` |
+| P1.6 | Monorepo structure (`frontend/` + `backend/`) + MongoDB Atlas connect + seed | ✅ `abd455e` |
+| P1.7 | **10-Point Enterprise Security Suite** (HSTS, Rate-limiting, NoSQL sanitize, Razorpay HMAC) | ✅ `954fa3d` |
+| P2 | Design system: 7H SVG logo, glassmorphic header, ticker, 4-col footer | ✅ `e28021a` |
+| P3 | Home page (cinematic hero, marquee, countdown timer, primer spotlight, occasions, coupons) | ✅ `e28021a` |
+| P4 | Shop (live search, notes, price slider, sort) + PDP (gallery, notes pyramid, pincode checker) | ✅ `e28021a` |
+| P5 | Slide-over Cart Drawer + Full Cart page + Wishlist + Coupon engine | ✅ `e28021a` |
+| P6 | Node.js + Express API + MongoDB Atlas Live Database (`sevenheaven_db`) | ✅ `abd455e` |
+| P7 | Account auth (bcrypt 12 rounds) + Single-page Checkout (Razorpay + COD ₹25 fee) | ✅ `e28021a` |
+| P8 | Admin Dashboard (`/admin`): live metrics, order management, inquiries, VIP roster | ✅ `e28021a` |
+| P9 | हिं/EN switcher + floating gold toasts + WhatsApp concierge (`+91 92019 91418`) | ✅ `e28021a` |
+| P10 | Universal fallback + production build passed (`dist/` 337ms) | ✅ `233a33a` |
 
 ---
 
 ## 💻 Local Development
 
-```bash
-npm install       # frontend deps
-npm run dev       # http://localhost:5173
-npm run build     # production build -> dist/
+Run frontend and backend simultaneously:
 
-# API (phase P6 ke baad)
-cd server && npm install && npm run dev   # http://localhost:5000
+```bash
+# 1. Start Backend API (Port 5000)
+cd backend
+npm install
+npm run dev
+
+# 2. In a separate terminal, start Frontend (Port 5173)
+cd frontend
+npm install
+npm run dev
+# Browser me open karein: http://localhost:5173
+
+# 3. Production Build
+cd frontend
+npm run build
 ```
 
 ---
