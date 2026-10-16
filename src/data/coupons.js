@@ -1,0 +1,137 @@
+// ============================================================
+// Coupon engine data — 1 order me 1 coupon active.
+// DB aane par `coupons` collection isi se seed hoga.
+// Types: percent | flat | freeShipping
+// ============================================================
+
+export const coupons = [
+  // ---------- Per-product coupons ----------
+  {
+    code: 'SH7PRIMER10',
+    type: 'percent',
+    value: 10,
+    appliesTo: 'sh7-primer-30ml', // product id
+    minOrder: 0,
+    maxDiscount: null,
+    minItems: 1,
+    firstOrderOnly: false,
+    usageLimit: null,
+    usedCount: 0,
+    active: true,
+    expiresAt: null,
+    description: '10% off on Invisible Blur Primer',
+  },
+  {
+    code: 'SH7NOIR15',
+    type: 'percent',
+    value: 15,
+    appliesTo: 'sh7-noir-essence-50',
+    minOrder: 0,
+    maxDiscount: null,
+    minItems: 1,
+    firstOrderOnly: false,
+    usageLimit: null,
+    usedCount: 0,
+    active: true,
+    expiresAt: null,
+    description: '15% off on Noir Essence',
+  },
+  {
+    code: 'SH7GOLD10',
+    type: 'percent',
+    value: 10,
+    appliesTo: 'sh7-golden-oud-100',
+    minOrder: 0,
+    maxDiscount: null,
+    minItems: 1,
+    firstOrderOnly: false,
+    usageLimit: null,
+    usedCount: 0,
+    active: true,
+    expiresAt: null,
+    description: '10% off on Golden Oud',
+  },
+  {
+    code: 'SH7LUNAR12',
+    type: 'percent',
+    value: 12,
+    appliesTo: 'sh7-lunar-nights-50',
+    minOrder: 0,
+    maxDiscount: null,
+    minItems: 1,
+    firstOrderOnly: false,
+    usageLimit: null,
+    usedCount: 0,
+    active: true,
+    expiresAt: null,
+    description: '12% off on Lunar Nights',
+  },
+  {
+    code: 'SH7AMBER15',
+    type: 'percent',
+    value: 15,
+    appliesTo: 'sh7-amber-essence-50',
+    minOrder: 0,
+    maxDiscount: null,
+    minItems: 1,
+    firstOrderOnly: false,
+    usageLimit: null,
+    usedCount: 0,
+    active: true,
+    expiresAt: null,
+    description: '15% off on Amber Essence',
+  },
+
+  // ---------- Sitewide coupons ----------
+  {
+    code: 'WELCOME10',
+    type: 'percent',
+    value: 10,
+    appliesTo: 'sitewide',
+    minOrder: 0,
+    maxDiscount: 200,
+    minItems: 1,
+    firstOrderOnly: true,
+    usageLimit: null,
+    usedCount: 0,
+    active: true,
+    expiresAt: null,
+    description: '10% off on your first order (max ₹200)',
+  },
+  {
+    code: 'FREESHIP',
+    type: 'freeShipping',
+    value: 0,
+    appliesTo: 'sitewide',
+    minOrder: 499,
+    maxDiscount: null,
+    minItems: 1,
+    firstOrderOnly: false,
+    usageLimit: null,
+    usedCount: 0,
+    active: true,
+    expiresAt: null,
+    description: 'Free shipping on orders above ₹499',
+  },
+  {
+    code: 'COMBO20',
+    type: 'percent',
+    value: 20,
+    appliesTo: 'sitewide',
+    minOrder: 0,
+    maxDiscount: 500,
+    minItems: 3,
+    firstOrderOnly: false,
+    usageLimit: null,
+    usedCount: 0,
+    active: true,
+    expiresAt: null,
+    description: '20% off when you buy 3+ items (max ₹500)',
+  },
+]
+
+export function findCoupon(code) {
+  if (!code) return null
+  const c = coupons.find((x) => x.code.toLowerCase() === String(code).trim().toLowerCase())
+  return c && c.active ? c : null
+}
