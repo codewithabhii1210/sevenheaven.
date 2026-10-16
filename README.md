@@ -258,7 +258,7 @@ sevenheaven/
 | Name | **Invisible Blur Primer — "Smooth Blur Perfect"** |
 | Category | Makeup (Primer) |
 | Size | **30 ml** |
-| Price (demo) | MRP **₹699** → Sale **₹499** ⚠️ *rate confirm karna hai* |
+| Price | MRP **₹699** → Sale **₹499** (29% off) ✅ *confirmed by owner* |
 | Coupon | `SH7PRIMER10` (10% extra) |
 | Image (official) | `https://sevenheaven.co.in/wp-content/uploads/2026/08/ChatGPT-Image-Aug-9-2026-05_15_45-AM.png` |
 | Short line | *Instantly Blurs Imperfections* |
@@ -495,7 +495,7 @@ npm run preview   # build preview
 
 ## 📌 Open Decisions (TODO)
 
-- [ ] **Primer ka asli rate** — demo ₹699→₹499 rakha hai; actual MRP/sale price batao
+- [x] **Primer ka asli rate** — MRP ₹699 → ₹499 ✅ confirmed
 - [ ] **Firebase project** — user bana raha hai (Google account) → `firebase.js` me config paste hoga
 - [ ] **Razorpay KYC** — COD phase 1 me live, Razorpay baad me
 - [ ] **COD phone number** — `+91 92325 61621` same rakhein? shipping charge (free/₹)?
