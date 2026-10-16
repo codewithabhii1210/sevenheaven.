@@ -1,14 +1,18 @@
 # Dependencies
 node_modules
+*/node_modules
 
 # Build output
 dist
+frontend/dist
 dist-ssr
 
-# Env files (secrets — Firebase keys etc.)
+# Environment variables (SECRETS — NEVER COMMIT)
 .env
 .env.*
 !.env.example
+*.env
+*.env.local
 
 # Editor / OS
 .vscode/*
@@ -16,3 +20,6 @@ dist-ssr
 .DS_Store
 *.local
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

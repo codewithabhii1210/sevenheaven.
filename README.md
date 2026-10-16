@@ -112,39 +112,40 @@ Purani site sirf **features aur content reference** hai — design/layout bilkul
 
 ```
 sevenheaven/
-├── index.html / vite.config.js / package.json
-├── .env                          ← API URL, Razorpay keys (GIT-IGNORED ✅)
-├── public/
-│   ├── favicon.svg               ✅ 7H gold favicon
-│   ├── images/                   ✅ SAB images local saved
-│   │   ├── logo-seven-heaven.png ✅
-│   │   ├── hero-banner.jpg       ✅
-│   │   ├── offer-banner.jpg      ✅
-│   │   ├── category-fragrance.jpg✅
-│   │   └── products/             ✅ 5 product images
-│   └── .htaccess                 ← Hostinger SPA routing (deploy phase)
-├── server/                       ← Node + Express API
-│   ├── index.js                  ← express app entry
-│   ├── db.js                     ← MongoDB Atlas connection (mongoose)
-│   ├── routes/ (products, orders, auth, coupons, contact, razorpay)
-│   ├── middleware/ (auth JWT, adminOnly)
-│   └── seed.js                   ← products.js/coupons.js se DB seed
-├── src/
-│   ├── main.jsx / App.jsx / index.css   ✅
-│   ├── styles/                   ← component CSS
-│   ├── components/               ✅ Header, Footer + baaki (ProductCard, SearchFilter, CouponInput, LangSwitch, ScrollToTop, Toast)
-│   ├── pages/                    ✅ 7 placeholders + ProductDetail, Checkout, OrderConfirmation, NotFound, Legal, admin/*
-│   ├── context/                  ← CartContext, WishlistContext, AuthContext, LangContext
-│   ├── data/
-│   │   ├── site.js               ✅ phone, shipping, GST, socials
-│   │   ├── products.js           ✅ 5 products (DB seed)
-│   │   └── coupons.js            ✅ 8 coupons (DB seed)
-│   ├── lib/
-│   │   ├── api.js                ← fetch wrapper (VITE_API_URL)
-│   │   ├── razorpay.js           ← checkout script loader
-│   │   └── format.js             ← ₹ formatting (en-IN)
-│   └── i18n/ (hi.js, en.js)
-└── README.md                     ← ye file
+├── .env                          ← ROOT LEVEL .env (GIT-IGNORED — secret keys)
+├── .env.example                  ← Environment template
+├── package.json                  ← Monorepo scripts (dev:frontend, dev:backend, seed, build)
+├── .gitignore
+├── README.md
+│
+├── frontend/                     ← React 19 + Vite 8
+│   ├── index.html
+│   ├── vite.config.js            (envDir: '../' -> reads root .env)
+│   ├── package.json
+│   ├── public/
+│   │   ├── favicon.svg
+│   │   └── images/               (logo, hero, banners, 5 product images)
+│   └── src/
+│       ├── main.jsx, App.jsx, index.css
+│       ├── components/ (Header, Footer, ProductCard, etc.)
+│       ├── pages/ (Home, Shop, ProductDetail, About, Contact, Account, Cart, Wishlist, Checkout, Admin)
+│       └── data/ (site.js, products.js, coupons.js)
+│
+└── backend/                      ← Node.js + Express + Mongoose (REST API)
+    ├── index.js                  (Express server on port 5000)
+    ├── db.js                     (MongoDB Atlas connection via root .env)
+    ├── package.json
+    ├── models/                   (Product, Coupon, Order, User, ContactMessage, Newsletter)
+    ├── middleware/               (auth JWT, adminOnly, optionalAuth)
+    ├── routes/
+    │   ├── products.js           (GET /api/products, GET /api/products/:slug)
+    │   ├── coupons.js            (GET /api/coupons, GET /api/coupons/:code)
+    │   ├── auth.js               (POST /api/auth/register, /login, GET /me)
+    │   ├── orders.js             (POST /api/orders, GET /my, GET /:orderNo)
+    │   ├── razorpay.js           (POST /api/razorpay/create-order, /verify)
+    │   ├── contact.js            (POST /api/contact, /newsletter)
+    │   └── admin.js              (GET /api/admin/stats, orders, products, coupons)
+    └── seed.js                   (npm run seed -> seeds Atlas DB live)
 ```
 
 ---
