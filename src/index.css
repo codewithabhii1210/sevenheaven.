@@ -1,0 +1,183 @@
+/* ============================================================
+   Seven Heaven Cosmetics — base styles
+   Design system (black & gold luxury) yahan build hoga.
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  /* palette — final values design phase me refine honge */
+  --color-bg: #0b0b0d;
+  --color-surface: #131317;
+  --color-text: #f4f1ea;
+  --color-text-muted: #a7a29b;
+  --color-gold: #d4af37;
+  --color-gold-soft: #e8cf7a;
+  --color-border: rgba(212, 175, 55, 0.22);
+
+  --font-display: Georgia, 'Times New Roman', serif;
+  --font-body: 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  --container: 1180px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.container {
+  width: min(100% - 2.5rem, var(--container));
+  margin-inline: auto;
+}
+
+/* ---------- placeholder pages (temporary) ---------- */
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#content {
+  flex: 1;
+}
+
+.page-placeholder {
+  text-align: center;
+  padding: 6rem 1.5rem;
+}
+
+.page-placeholder h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  margin: 0.4rem 0;
+}
+
+.eyebrow {
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: var(--color-gold);
+  margin: 0;
+}
+
+/* ---------- header / footer (temporary layout) ---------- */
+
+.site-header {
+  border-bottom: 1px solid var(--color-border);
+  padding: 1rem 0;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid var(--color-gold);
+  border-radius: 50%;
+  font-family: var(--font-display);
+  color: var(--color-gold);
+  font-size: 0.9rem;
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+}
+
+.brand-name em {
+  display: block;
+  font-style: normal;
+  font-size: 0.65rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+
+.main-nav,
+.header-actions {
+  display: flex;
+  gap: 1.4rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.main-nav a:hover,
+.header-actions a:hover {
+  color: var(--color-gold);
+}
+
+.site-footer {
+  border-top: 1px solid var(--color-border);
+  padding: 2rem 0;
+  margin-top: 3rem;
+}
+
+.footer-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.footer-brand {
+  font-family: var(--font-display);
+  color: var(--color-gold);
+  margin: 0;
+}
+
+.footer-nav {
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.footer-copy {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
