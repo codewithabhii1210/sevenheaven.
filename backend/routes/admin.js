@@ -1,13 +1,14 @@
 import { Router } from 'express'
 import { requireAuth, adminOnly } from '../middleware/auth.js'
 import { Order, Product, Coupon, ContactMessage, Newsletter, User } from '../models/index.js'
+import { sanitize } from '../middleware/sanitize.js'
 
 const router = Router()
 
-// All routes here require login + admin role
+// Enforce authentication & strict admin RBAC on all routes in this file
 router.use(requireAuth, adminOnly)
 
-// GET /api/admin/stats — Dashboard summary
+// GET /api/admin/stats — Dashboard metrics
 router.get('/stats', async (req, res) => {
   try {
     const [totalOrders, pendingOrders, totalProducts, totalUsers, messagesCount, subscribersCount] =
@@ -20,15 +21,15 @@ router.get('/stats', async (req, res) => {
         Newsletter.countDocuments(),
       ])
 
-    // Total revenue from paid orders or placed orders
+    // Total revenue from paid orders
     const revenueAgg = await Order.aggregate([
       { $match: { paymentStatus: 'paid' } },
       { $group: { _id: null, totalRevenue: { $sum: '$total' } } },
     ])
     const totalRevenue = revenueAgg[0]?.totalRevenue || 0
 
-    // Recent orders
-    const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(5).lean()
+    // Recent 10 orders
+    const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(10).lean()
 
     res.json({
       stats: {
@@ -42,70 +43,88 @@ router.get('/stats', async (req, res) => {
       },
       recentOrders,
     })
-  } catch (e) {
-    res.status(500).json({ error: e.message })
+  } catch (err) {
+    console.error('Admin Stats Error:', err)
+    res.status(500).json({ error: 'Failed to compute dashboard metrics' })
   }
 })
 
-// GET /api/admin/orders — List orders with filters
+// GET /api/admin/orders — Filtered order list with pagination
 router.get('/orders', async (req, res) => {
   try {
-    const { status, paymentStatus, page = 1, limit = 20 } = req.query
+    const status = req.query.status ? sanitize.string(req.query.status, 20) : null
+    const paymentStatus = req.query.paymentStatus ? sanitize.string(req.query.paymentStatus, 20) : null
+    const page = sanitize.int(req.query.page, 1, 1000) || 1
+    const limit = sanitize.int(req.query.limit, 1, 100) || 20
+
     const query = {}
     if (status) query.status = status
     if (paymentStatus) query.paymentStatus = paymentStatus
 
-    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10)
+    const skip = (page - 1) * limit
     const [total, orders] = await Promise.all([
       Order.countDocuments(query),
-      Order.find(query).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit, 10)).lean(),
+      Order.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
     ])
 
-    res.json({ total, page: parseInt(page, 10), orders })
-  } catch (e) {
-    res.status(500).json({ error: e.message })
+    res.json({ total, page, limit, orders })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve orders list' })
   }
 })
 
-// PATCH /api/admin/orders/:id/status — Update order status
+// PATCH /api/admin/orders/:id/status — Order status transitions
 router.patch('/orders/:id/status', async (req, res) => {
   try {
-    const { status, paymentStatus } = req.body || {}
+    const rawStatus = req.body?.status ? sanitize.string(req.body.status, 20) : null
+    const rawPaymentStatus = req.body?.paymentStatus ? sanitize.string(req.body.paymentStatus, 20) : null
+
+    const validStatuses = ['placed', 'packed', 'shipped', 'delivered', 'cancelled']
+    const validPaymentStatuses = ['pending', 'paid', 'failed']
+
     const update = {}
-    if (status) update.status = status
-    if (paymentStatus) update.paymentStatus = paymentStatus
+    if (rawStatus && validStatuses.includes(rawStatus)) {
+      update.status = rawStatus
+    }
+    if (rawPaymentStatus && validPaymentStatuses.includes(rawPaymentStatus)) {
+      update.paymentStatus = rawPaymentStatus
+    }
+
+    if (Object.keys(update).length === 0) {
+      return res.status(400).json({ error: 'Valid status or paymentStatus is required' })
+    }
 
     const order = await Order.findByIdAndUpdate(req.params.id, update, { new: true })
     if (!order) return res.status(404).json({ error: 'Order not found' })
 
     res.json({ success: true, order })
-  } catch (e) {
-    res.status(500).json({ error: e.message })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update order status' })
   }
 })
 
-// POST /api/admin/products — Add new product
+// POST /api/admin/products — Add new product to catalog
 router.post('/products', async (req, res) => {
   try {
     const product = await Product.create(req.body)
     res.status(201).json({ success: true, product })
-  } catch (e) {
-    res.status(500).json({ error: e.message })
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Product creation failed' })
   }
 })
 
-// PUT /api/admin/products/:id — Edit product
+// PUT /api/admin/products/:id — Edit product in catalog
 router.put('/products/:id', async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true })
     if (!product) return res.status(404).json({ error: 'Product not found' })
     res.json({ success: true, product })
-  } catch (e) {
-    res.status(500).json({ error: e.message })
+  } catch (err) {
+    res.status(400).json({ error: 'Product update failed' })
   }
 })
 
-// DELETE /api/admin/products/:id — Soft-delete / Toggle product active
+// DELETE /api/admin/products/:id — Toggle active state of product
 router.delete('/products/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -113,28 +132,28 @@ router.delete('/products/:id', async (req, res) => {
     product.active = !product.active
     await product.save()
     res.json({ success: true, active: product.active })
-  } catch (e) {
-    res.status(500).json({ error: e.message })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to toggle product status' })
   }
 })
 
-// GET /api/admin/messages — Contact messages
+// GET /api/admin/messages — Customer messages
 router.get('/messages', async (req, res) => {
   try {
     const messages = await ContactMessage.find().sort({ createdAt: -1 }).lean()
     res.json({ count: messages.length, messages })
-  } catch (e) {
-    res.status(500).json({ error: e.message })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch contact messages' })
   }
 })
 
-// GET /api/admin/newsletter — Subscriber emails
+// GET /api/admin/newsletter — VIP subscribers
 router.get('/newsletter', async (req, res) => {
   try {
     const subscribers = await Newsletter.find().sort({ createdAt: -1 }).lean()
     res.json({ count: subscribers.length, subscribers })
-  } catch (e) {
-    res.status(500).json({ error: e.message })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch newsletter subscribers' })
   }
 })
 

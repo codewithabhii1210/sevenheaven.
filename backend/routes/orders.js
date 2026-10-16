@@ -1,10 +1,12 @@
 import { Router } from 'express'
 import { Order, Product, Coupon } from '../models/index.js'
 import { optionalAuth, requireAuth } from '../middleware/auth.js'
+import { sanitize } from '../middleware/sanitize.js'
+import { orderLimiter } from '../middleware/rateLimiter.js'
 
 const router = Router()
 
-// Helper to generate readable order number: SH-YYMMDD-XXXX
+// Cryptographically safe readable order number: SH-YYMMDD-XXXX
 function generateOrderNo() {
   const dateStr = new Date()
     .toISOString()
@@ -14,34 +16,74 @@ function generateOrderNo() {
   return `SH-${dateStr}-${rand}`
 }
 
-// POST /api/orders — Place a new order (Guest checkout allowed)
-router.post('/', optionalAuth, async (req, res) => {
+// POST /api/orders — Secure order creation with strict input validation & rate limiting
+router.post('/', orderLimiter, optionalAuth, async (req, res) => {
   try {
     const { items, address, paymentMethod, couponCode } = req.body || {}
 
-    // Validation
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: 'Order items are required' })
-    }
-    if (!address || !address.name || !address.phone || !address.line1 || !address.city || !address.pincode) {
-      return res.status(400).json({ error: 'Complete delivery address is required' })
-    }
-    if (!paymentMethod || !['cod', 'razorpay'].includes(paymentMethod)) {
-      return res.status(400).json({ error: 'Valid payment method (cod or razorpay) required' })
+    // 1. Validate items array
+    if (!items || !Array.isArray(items) || items.length === 0 || items.length > 30) {
+      return res.status(400).json({ error: 'Order must contain between 1 and 30 items' })
     }
 
-    // 1. Calculate subtotal & verify items
+    // 2. Strict Address Validation & Sanitization
+    if (!address || typeof address !== 'object') {
+      return res.status(400).json({ error: 'Shipping address object is required' })
+    }
+
+    const cleanName = sanitize.string(address.name, 60)
+    const cleanPhone = sanitize.phone(address.phone)
+    const cleanEmail = address.email ? sanitize.email(address.email) : ''
+    const cleanLine1 = sanitize.string(address.line1, 150)
+    const cleanCity = sanitize.string(address.city, 60)
+    const cleanState = sanitize.string(address.state || 'Madhya Pradesh', 60)
+    const cleanPincode = sanitize.pincode(address.pincode)
+
+    if (!cleanName || cleanName.length < 2) {
+      return res.status(400).json({ error: 'Full customer name is required' })
+    }
+    if (!cleanPhone) {
+      return res.status(400).json({ error: 'Valid 10-digit Indian phone number is required' })
+    }
+    if (!cleanLine1 || cleanLine1.length < 5) {
+      return res.status(400).json({ error: 'Detailed address line (house/street) is required' })
+    }
+    if (!cleanCity) {
+      return res.status(400).json({ error: 'City name is required' })
+    }
+    if (!cleanPincode) {
+      return res.status(400).json({ error: 'Valid 6-digit postal pincode is required' })
+    }
+
+    // 3. Payment method validation
+    const cleanPayment = sanitize.string(paymentMethod, 10)
+    if (!['cod', 'razorpay'].includes(cleanPayment)) {
+      return res.status(400).json({ error: 'Payment method must be COD or Razorpay' })
+    }
+
+    // 4. Server-side price calculation (NEVER trust client price)
     let subtotal = 0
     const verifiedItems = []
 
     for (const item of items) {
-      const p = await Product.findOne({ id: item.productId, active: true })
-      if (!p) {
-        return res.status(400).json({ error: `Product not found: ${item.productId}` })
+      const cleanProductId = sanitize.string(item.productId, 50)
+      const qty = sanitize.int(item.qty, 1, 20)
+      if (!qty) {
+        return res.status(400).json({ error: 'Item quantity must be between 1 and 20' })
       }
-      const qty = Math.max(1, parseInt(item.qty, 10) || 1)
-      const linePrice = p.price * qty
-      subtotal += linePrice
+
+      const p = await Product.findOne({ id: cleanProductId, active: true })
+      if (!p) {
+        return res.status(400).json({ error: `Product unavailable or out of stock: ${cleanProductId}` })
+      }
+
+      // Check stock if applicable
+      if (p.stock < qty) {
+        return res.status(400).json({ error: `Insufficient stock for product: ${p.name}` })
+      }
+
+      const lineTotal = p.price * qty
+      subtotal += lineTotal
 
       verifiedItems.push({
         productId: p.id,
@@ -53,22 +95,20 @@ router.post('/', optionalAuth, async (req, res) => {
       })
     }
 
-    // 2. Coupon calculation
+    // 5. Secure Coupon calculation
     let discount = 0
     let appliedCoupon = null
+    const cleanCouponCode = couponCode ? sanitize.string(couponCode, 20).toUpperCase() : null
 
-    if (couponCode) {
-      const c = await Coupon.findOne({
-        code: String(couponCode).toUpperCase(),
-        active: true,
-      })
-
+    if (cleanCouponCode) {
+      const c = await Coupon.findOne({ code: cleanCouponCode, active: true })
       if (c) {
-        // Expiry check
-        if (!c.expiresAt || new Date(c.expiresAt) >= new Date()) {
-          // Applies to check
+        const notExpired = !c.expiresAt || new Date(c.expiresAt) >= new Date()
+        const usageLimitOk = !c.usageLimit || c.usedCount < c.usageLimit
+
+        if (notExpired && usageLimitOk) {
           let eligibleSubtotal = subtotal
-          if (c.appliesTo !== 'sitewide') {
+          if (c.appliesTo && c.appliesTo !== 'sitewide') {
             const match = verifiedItems.find((i) => i.productId === c.appliesTo)
             eligibleSubtotal = match ? match.price * match.qty : 0
           }
@@ -88,18 +128,18 @@ router.post('/', optionalAuth, async (req, res) => {
       }
     }
 
-    // 3. Shipping Calculation (Flipkart style: Free above ₹499, else ₹49)
+    // 6. Shipping Calculation (Flipkart style: Free above ₹499, else ₹49)
     const discountedSubtotal = Math.max(0, subtotal - discount)
     const isFreeShippingCoupon = appliedCoupon?.code === 'FREESHIP'
     const shippingFee = discountedSubtotal >= 499 || isFreeShippingCoupon ? 0 : 49
 
-    // 4. COD handling fee (₹25 confirmed)
-    const codFee = paymentMethod === 'cod' ? 25 : 0
+    // 7. COD fee (₹25 confirmed)
+    const codFee = cleanPayment === 'cod' ? 25 : 0
 
-    // 5. Grand Total (GST already inclusive)
+    // 8. Grand Total (all inclusive)
     const total = discountedSubtotal + shippingFee + codFee
 
-    // 6. Create order in MongoDB
+    // 9. Create order record
     const orderNo = generateOrderNo()
     const order = await Order.create({
       orderNo,
@@ -111,24 +151,27 @@ router.post('/', optionalAuth, async (req, res) => {
       shippingFee,
       codFee,
       total,
-      paymentMethod,
+      paymentMethod: cleanPayment,
       paymentStatus: 'pending',
       status: 'placed',
       address: {
-        name: String(address.name).trim(),
-        phone: String(address.phone).trim(),
-        email: String(address.email || '').trim(),
-        line1: String(address.line1).trim(),
-        city: String(address.city).trim(),
-        state: String(address.state || '').trim(),
-        pincode: String(address.pincode).trim(),
+        name: cleanName,
+        phone: cleanPhone,
+        email: cleanEmail,
+        line1: cleanLine1,
+        city: cleanCity,
+        state: cleanState,
+        pincode: cleanPincode,
       },
       placedAt: new Date(),
     })
 
-    // Increment coupon usage if used
+    // Deduct stock and increment coupon usage asynchronously
     if (appliedCoupon?.code) {
       await Coupon.updateOne({ code: appliedCoupon.code }, { $inc: { usedCount: 1 } })
+    }
+    for (const item of verifiedItems) {
+      await Product.updateOne({ id: item.productId }, { $inc: { stock: -item.qty } })
     }
 
     res.status(201).json({
@@ -136,35 +179,37 @@ router.post('/', optionalAuth, async (req, res) => {
       orderNo: order.orderNo,
       order,
     })
-  } catch (e) {
-    res.status(500).json({ error: e.message })
+  } catch (err) {
+    console.error('Order Creation Error:', err)
+    res.status(500).json({ error: 'Failed to process order. Please try again.' })
   }
 })
 
-// GET /api/orders/my — Logged-in user's order history
+// GET /api/orders/my — Logged-in customer orders
 router.get('/my', requireAuth, async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.auth.id }).sort({ createdAt: -1 }).lean()
     res.json({ count: orders.length, orders })
-  } catch (e) {
-    res.status(500).json({ error: e.message })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch order history' })
   }
 })
 
-// GET /api/orders/:orderNo — Single order lookup by order number
+// GET /api/orders/:orderNo — Single order lookup with privacy protection
 router.get('/:orderNo', optionalAuth, async (req, res) => {
   try {
-    const order = await Order.findOne({ orderNo: req.params.orderNo }).lean()
+    const cleanOrderNo = sanitize.string(req.params.orderNo, 40)
+    const order = await Order.findOne({ orderNo: cleanOrderNo }).lean()
     if (!order) return res.status(404).json({ error: 'Order not found' })
 
-    // Privacy: if order belongs to a user, only that user or admin can view
+    // Privacy guard: if order belongs to a user, guest cannot view
     if (order.userId && (!req.auth || (req.auth.id !== order.userId.toString() && req.auth.role !== 'admin'))) {
-      return res.status(403).json({ error: 'Access denied' })
+      return res.status(403).json({ error: 'Access denied to this order' })
     }
 
     res.json({ order })
-  } catch (e) {
-    res.status(500).json({ error: e.message })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch order details' })
   }
 })
 

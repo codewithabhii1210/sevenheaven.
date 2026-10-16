@@ -1,44 +1,80 @@
 import jwt from 'jsonwebtoken'
 import { User } from '../models/index.js'
 
-// Bearer token verify → req.auth = { id, email, role }
+// Extract token from Bearer header OR HttpOnly cookie
+function extractToken(req) {
+  const header = req.headers.authorization || ''
+  if (header.startsWith('Bearer ')) {
+    return header.slice(7).trim()
+  }
+  if (req.cookies && req.cookies.token) {
+    return req.cookies.token
+  }
+  return null
+}
+
+// 1. Enforce Authentication (RBAC Base)
 export async function requireAuth(req, res, next) {
   try {
-    const header = req.headers.authorization || ''
-    const token = header.startsWith('Bearer ') ? header.slice(7) : null
-    if (!token) return res.status(401).json({ error: 'Login required' })
+    const token = extractToken(req)
+    if (!token) {
+      return res.status(401).json({ error: 'Access denied: Authentication required' })
+    }
 
     const payload = jwt.verify(token, process.env.JWT_SECRET)
-    req.auth = { id: payload.sub, email: payload.email, role: payload.role }
-    next()
-  } catch {
-    res.status(401).json({ error: 'Invalid or expired token' })
-  }
-}
-
-// Sirf admin access
-export function adminOnly(req, res, next) {
-  if (req.auth?.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' })
-  }
-  next()
-}
-
-// Optional auth — token ho to user info laga do, warna chalta reh
-export function optionalAuth(req, res, next) {
-  const header = req.headers.authorization || ''
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null
-  if (token) {
-    try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET)
-      req.auth = { id: payload.sub, email: payload.email, role: payload.role }
-    } catch {
-      /* ignore */
+    const user = await User.findById(payload.sub).select('-passwordHash')
+    if (!user) {
+      return res.status(401).json({ error: 'User account no longer exists' })
     }
+
+    req.auth = {
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role,
+      user,
+    }
+    next()
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Session expired. Please login again.' })
+    }
+    return res.status(401).json({ error: 'Invalid or forged token' })
   }
-  next()
 }
 
-export async function getUserById(id) {
-  return User.findById(id).select('-passwordHash')
+// 2. Role-Based Access Control (RBAC Enforcement)
+export function requireRole(...allowedRoles) {
+  return (req, res, next) => {
+    if (!req.auth || !allowedRoles.includes(req.auth.role)) {
+      return res.status(403).json({
+        error: 'Forbidden: Insufficient privileges for this resource',
+      })
+    }
+    next()
+  }
+}
+
+// Shortcut for admin-only endpoints
+export const adminOnly = requireRole('admin')
+
+// 3. Optional Authentication (allows guest or logged-in user)
+export async function optionalAuth(req, res, next) {
+  try {
+    const token = extractToken(req)
+    if (token) {
+      const payload = jwt.verify(token, process.env.JWT_SECRET)
+      const user = await User.findById(payload.sub).select('-passwordHash')
+      if (user) {
+        req.auth = {
+          id: user._id.toString(),
+          email: user.email,
+          role: user.role,
+          user,
+        }
+      }
+    }
+  } catch {
+    // Silently continue for guests
+  }
+  next()
 }
