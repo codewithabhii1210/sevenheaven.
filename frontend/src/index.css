@@ -1311,23 +1311,30 @@ button {
   flex-direction: column;
   position: relative;
   transition: all var(--transition-normal);
+  height: 100%;
 }
 
 .product-card:hover {
-  border-color: var(--color-border-gold);
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), var(--color-gold-glow);
+  border-color: rgba(212, 175, 55, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), var(--color-gold-glow);
 }
 
 .product-media-wrap {
   position: relative;
-  background: #08080a;
-  aspect-ratio: 1 / 1.05;
+  background: #0d0d12;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem;
 }
 
 .product-img-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
 }
@@ -1335,21 +1342,21 @@ button {
 .product-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform var(--transition-slow);
 }
 
 .product-card:hover .product-img {
-  transform: scale(1.06);
+  transform: scale(1.04);
 }
 
 .product-badges-stack {
   position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
+  top: 0.6rem;
+  left: 0.6rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.25rem;
   z-index: 2;
 }
 
@@ -1357,11 +1364,11 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 0.22rem 0.55rem;
+  padding: 0.2rem 0.45rem;
   border-radius: 3px;
 }
 
@@ -1382,31 +1389,32 @@ button {
 }
 
 .badge-discount {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(14, 14, 20, 0.92);
   color: var(--color-gold-light);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-gold);
 }
 
 .wishlist-btn {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  background: rgba(10, 10, 14, 0.6);
+  top: 0.6rem;
+  right: 0.6rem;
+  background: rgba(10, 10, 14, 0.7);
   backdrop-filter: blur(8px);
   border: 1px solid var(--color-border-subtle);
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
   z-index: 2;
   transition: all var(--transition-fast);
+  cursor: pointer;
 }
 
 .wishlist-btn:hover {
   background: rgba(10, 10, 14, 0.95);
   border-color: var(--color-gold);
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 .wishlist-btn.is-active {
@@ -1414,48 +1422,8 @@ button {
   border-color: var(--color-gold);
 }
 
-.quick-add-wrap {
-  position: absolute;
-  bottom: 0.75rem;
-  left: 0.75rem;
-  right: 0.75rem;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: all var(--transition-normal);
-  z-index: 3;
-}
-
-.product-card:hover .quick-add-wrap {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.quick-add-btn {
-  width: 100%;
-  background: rgba(10, 10, 14, 0.92);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--color-gold);
-  color: var(--color-gold);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 0.65rem;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all var(--transition-fast);
-}
-
-.quick-add-btn:hover {
-  background: var(--color-gold-gradient);
-  color: #000000;
-}
-
 .product-info-wrap {
-  padding: 1.25rem;
+  padding: 0.85rem 1rem;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -1465,19 +1433,28 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-gold);
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.25rem;
 }
 
 .product-title {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  font-weight: 600;
   margin: 0 0 0.2rem;
-  line-height: 1.3;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-title a {
+  color: var(--color-text);
+  transition: color var(--transition-fast);
 }
 
 .product-title a:hover {
@@ -1485,16 +1462,19 @@ button {
 }
 
 .product-subname {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: var(--color-text-muted);
-  margin: 0 0 0.65rem;
+  margin: 0 0 0.4rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .product-rating-row {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.75rem;
+  gap: 0.35rem;
+  margin-bottom: 0.45rem;
 }
 
 .rating-stars {
@@ -1503,31 +1483,33 @@ button {
 }
 
 .rating-number {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
+  color: var(--color-gold);
 }
 
 .reviews-count {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--color-text-dim);
 }
 
 .product-price-row {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: 0.45rem;
   margin-top: auto;
+  flex-wrap: wrap;
 }
 
 .product-current-price {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--color-gold-light);
   font-family: var(--font-display);
 }
 
 .product-mrp-price {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   text-decoration: line-through;
   color: var(--color-text-dim);
 }
@@ -1535,28 +1517,40 @@ button {
 .product-save-text {
   font-size: 0.72rem;
   color: #4ade80;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .product-tax-note {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   color: var(--color-text-dim);
-  margin: 0.25rem 0 0;
+  margin: 0.15rem 0 0.65rem;
 }
 
-.mobile-add-btn {
-  display: none;
-  margin-top: 0.85rem;
+.product-card-action-btn {
   width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  background: var(--color-gold-gradient);
+  color: #000000;
+  border: 1px solid var(--color-gold);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  min-height: 38px;
+  margin-top: 0.25rem;
 }
 
-@media (max-width: 768px) {
-  .quick-add-wrap {
-    display: none;
-  }
-  .mobile-add-btn {
-    display: inline-flex;
-  }
+.product-card-action-btn:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+  transform: translateY(-1px);
 }
 
 /* ============================================================
@@ -1908,8 +1902,10 @@ button {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  max-width: 860px;
+  margin: 0 auto;
 }
 
 .catalog-cta-wrap {
@@ -2655,8 +2651,8 @@ button {
 /* Shop Products Area */
 .shop-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
 }
 
 .shop-loading-state,
@@ -4983,8 +4979,10 @@ button {
 
 .wishlist-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  max-width: 860px;
+  margin: 0 auto;
 }
 
 .wishlist-card {
@@ -6249,26 +6247,47 @@ button {
   }
 }
 
-/* --- 5. Mobile & Tablet Products Grid (2-Column Polish) --- */
+/* --- 5. Mobile & Tablet Products Grid (Flipkart-Style 2-Column Responsive System) --- */
+@media (max-width: 900px) {
+  .products-grid,
+  .wishlist-grid {
+    max-width: 680px;
+    gap: 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .container {
-    width: min(100% - 1.5rem, var(--container));
+    width: min(100% - 1.25rem, var(--container));
   }
 
   .products-grid,
   .shop-grid,
   .wishlist-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 0.75rem !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.65rem !important;
+    max-width: 100%;
+  }
+
+  .product-card {
+    border-radius: var(--radius-sm);
+  }
+
+  .product-media-wrap {
+    padding: 0.5rem;
   }
 
   .product-info-wrap {
-    padding: 0.85rem !important;
+    padding: 0.65rem 0.75rem !important;
   }
 
   .product-title {
-    font-size: 0.95rem !important;
-    line-height: 1.25 !important;
+    font-size: 0.88rem !important;
+    line-height: 1.3 !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .product-subname {
@@ -6276,41 +6295,55 @@ button {
   }
 
   .product-current-price {
-    font-size: 1.1rem !important;
+    font-size: 1rem !important;
   }
 
   .product-mrp-price {
-    font-size: 0.78rem !important;
+    font-size: 0.74rem !important;
+  }
+
+  .product-save-text {
+    font-size: 0.65rem !important;
   }
 
   .product-meta-row {
-    font-size: 0.62rem !important;
+    font-size: 0.6rem !important;
+    margin-bottom: 0.2rem !important;
   }
 
   .product-rating-row {
-    margin-bottom: 0.4rem !important;
+    margin-bottom: 0.35rem !important;
+    gap: 0.25rem !important;
   }
 
-  .mobile-add-btn {
-    display: inline-flex !important;
-    padding: 0.55rem 0.5rem !important;
-    font-size: 0.75rem !important;
-    letter-spacing: 0.05em !important;
+  .product-card-action-btn {
+    padding: 0.45rem 0.5rem !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.04em !important;
+    min-height: 36px !important;
+    gap: 0.35rem !important;
   }
 
   .badge {
-    font-size: 0.58rem !important;
-    padding: 0.15rem 0.4rem !important;
+    font-size: 0.55rem !important;
+    padding: 0.15rem 0.35rem !important;
+  }
+
+  .wishlist-btn {
+    width: 30px !important;
+    height: 30px !important;
+    top: 0.4rem !important;
+    right: 0.4rem !important;
   }
 }
 
-/* --- 6. Extra Small Screen Fallback (iPhone SE, Galaxy Fold 320px-360px) --- */
-@media (max-width: 360px) {
+/* --- 6. Ultra-Narrow Screen Fallback (Galaxy Fold closed screen <= 320px only) --- */
+@media (max-width: 320px) {
   .products-grid,
   .shop-grid,
   .wishlist-grid {
     grid-template-columns: 1fr !important;
-    gap: 1rem !important;
+    gap: 0.85rem !important;
   }
 
   .hero-title {

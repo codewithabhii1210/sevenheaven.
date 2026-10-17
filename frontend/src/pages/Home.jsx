@@ -167,7 +167,8 @@ export default function Home() {
         <div className="container">
           <div className="section-header-centered">
             <span className="eyebrow">{t('featuredCollection')}</span>
-            <h2 className="section-heading">{t('featuredSubtitle')}</h2>
+            <h2 className="section-heading">{t('featuredMainHeading')}</h2>
+            <p className="section-subtext">{t('featuredSubtitle')}</p>
             <div className="gold-divider-center" />
 
             {/* Category Filter Tabs */}

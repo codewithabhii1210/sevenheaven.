@@ -57,25 +57,18 @@ export default function ProductCard({ product }) {
 
         {/* Wishlist Heart Button on top right */}
         <button
-          onClick={() => toggleWishlist(product)}
+          type="button"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            toggleWishlist(product)
+          }}
           className={`wishlist-btn ${isFavorited ? 'is-active' : ''}`}
           title={isFavorited ? 'Remove from Wishlist' : 'Add to Wishlist'}
           aria-label={isFavorited ? 'Remove from Wishlist' : 'Add to Wishlist'}
         >
-          <Heart size={18} fill={isFavorited ? '#D4AF37' : 'none'} stroke={isFavorited ? '#D4AF37' : '#FFFFFF'} />
+          <Heart size={16} fill={isFavorited ? '#D4AF37' : 'none'} stroke={isFavorited ? '#D4AF37' : '#FFFFFF'} />
         </button>
-
-        {/* Quick Add Overlay on desktop hover */}
-        <div className="quick-add-wrap">
-          <button
-            onClick={() => addItem(product, 1)}
-            className="quick-add-btn"
-            aria-label={`Quick add ${product.name} to bag`}
-          >
-            <ShoppingBag size={15} />
-            <span>{t('addToCart')}</span>
-          </button>
-        </div>
       </div>
 
       {/* Product Information Body */}
@@ -98,7 +91,7 @@ export default function ProductCard({ product }) {
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
-                size={13}
+                size={12}
                 fill={i < Math.floor(product.rating || 5) ? '#D4AF37' : 'none'}
                 stroke="#D4AF37"
               />
@@ -123,10 +116,16 @@ export default function ProductCard({ product }) {
 
         <p className="product-tax-note">{t('taxInclusive')}</p>
 
-        {/* Mobile Action Button */}
+        {/* Flipkart-Style Action Button Aligned at Bottom */}
         <button
-          onClick={() => addItem(product, 1)}
-          className="btn btn-gold btn-sm mobile-add-btn"
+          type="button"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            addItem(product, 1)
+          }}
+          className="product-card-action-btn"
+          aria-label={`Add ${product.name} to cart`}
         >
           <ShoppingBag size={14} />
           <span>{t('addToCart')}</span>
