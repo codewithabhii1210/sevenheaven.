@@ -48,11 +48,19 @@
   --transition-fast: 0.15s ease;
   --transition-normal: 0.25s ease;
   --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* iOS / Android Safe Area Insets */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
 }
 
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -64,6 +72,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 100dvh;
 }
 
 /* Custom Scrollbar */
@@ -6108,3 +6119,360 @@ button {
     gap: 2.5rem;
   }
 }
+
+/* ============================================================
+   ENTERPRISE MOBILE, iOS & ANDROID RESPONSIVE SYSTEM
+   Tested for iPhone (SE, 12-16 Pro, Max), iPad, Android (Pixel, Galaxy, OnePlus)
+   ============================================================ */
+
+/* --- 1. iOS Safari Auto-Zoom Prevention on Form Inputs --- */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea,
+  .text-input,
+  .pincode-input,
+  .coupon-field,
+  .search-input-field,
+  .newsletter-input,
+  .sort-select,
+  .status-select {
+    font-size: 16px !important; /* Prevents iOS Safari from zooming into the page */
+  }
+}
+
+/* --- 2. Apple & Google 44px Touch Target Compliance --- */
+@media (max-width: 768px) {
+  .action-icon-btn,
+  .mobile-menu-trigger,
+  .mobile-drawer-close,
+  .drawer-close-btn,
+  .search-close-btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cart-qty-stepper .qty-btn,
+  .item-qty-control .qty-btn,
+  .qty-stepper .qty-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .wishlist-btn {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+/* --- 3. Dynamic Viewport & Safe-Area Drawer Overhauls --- */
+.mobile-drawer-overlay,
+.cart-drawer-overlay,
+.search-modal-overlay {
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for iOS address bar */
+  overscroll-behavior: contain;
+}
+
+.mobile-drawer {
+  height: 100vh;
+  height: 100dvh;
+  padding-top: calc(1.25rem + var(--sat));
+  padding-bottom: calc(1.75rem + var(--sab));
+  padding-left: calc(1.5rem + var(--sal));
+  padding-right: calc(1.5rem + var(--sar));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cart-drawer {
+  height: 100vh;
+  height: 100dvh;
+  padding-top: var(--sat);
+}
+
+.cart-drawer-header {
+  padding-top: calc(1rem + var(--sat));
+}
+
+.cart-drawer-body {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.cart-drawer-footer {
+  padding-bottom: calc(1.5rem + var(--sab));
+  padding-left: calc(1.5rem + var(--sal));
+  padding-right: calc(1.5rem + var(--sar));
+}
+
+.search-modal-content {
+  margin-top: var(--sat);
+  margin-bottom: var(--sab);
+}
+
+/* --- 4. PDP (Product Detail Page) Mobile Bottom Bar & Layout --- */
+@media (max-width: 900px) {
+  .pdp-page {
+    padding-bottom: calc(6rem + var(--sab)) !important;
+  }
+
+  .mobile-sticky-bar {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 95;
+    background: rgba(12, 12, 16, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--color-border);
+    padding: 0.85rem 1.25rem calc(0.85rem + var(--sab)) 1.25rem;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.85);
+  }
+
+  .mobile-sticky-bar .sticky-name {
+    font-size: 0.9rem;
+    max-width: 170px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-sticky-bar .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* --- 5. Mobile & Tablet Products Grid (2-Column Polish) --- */
+@media (max-width: 768px) {
+  .container {
+    width: min(100% - 1.5rem, var(--container));
+  }
+
+  .products-grid,
+  .shop-grid,
+  .wishlist-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .product-info-wrap {
+    padding: 0.85rem !important;
+  }
+
+  .product-title {
+    font-size: 0.95rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .product-subname {
+    display: none; /* Keeps mobile card heights uniform */
+  }
+
+  .product-current-price {
+    font-size: 1.1rem !important;
+  }
+
+  .product-mrp-price {
+    font-size: 0.78rem !important;
+  }
+
+  .product-meta-row {
+    font-size: 0.62rem !important;
+  }
+
+  .product-rating-row {
+    margin-bottom: 0.4rem !important;
+  }
+
+  .mobile-add-btn {
+    display: inline-flex !important;
+    padding: 0.55rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  .badge {
+    font-size: 0.58rem !important;
+    padding: 0.15rem 0.4rem !important;
+  }
+}
+
+/* --- 6. Extra Small Screen Fallback (iPhone SE, Galaxy Fold 320px-360px) --- */
+@media (max-width: 360px) {
+  .products-grid,
+  .shop-grid,
+  .wishlist-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .hero-title {
+    font-size: 1.85rem !important;
+  }
+}
+
+/* --- 7. Hero Section Mobile Optimization --- */
+@media (max-width: 900px) {
+  .hero-section {
+    min-height: auto !important;
+    padding: 2.5rem 0 3.5rem !important;
+  }
+
+  .hero-container {
+    grid-template-columns: 1fr !important;
+    gap: 2.5rem !important;
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 7vw, 3rem) !important;
+  }
+
+  .hero-description {
+    font-size: 0.92rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .hero-actions {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .hero-actions .btn {
+    width: 100% !important;
+  }
+
+  .hero-perks-row {
+    flex-wrap: wrap !important;
+    gap: 0.6rem !important;
+  }
+
+  .showcase-img {
+    aspect-ratio: 1 / 1 !important;
+  }
+}
+
+/* --- 8. Deal Countdown & Marquee Mobile --- */
+@media (max-width: 768px) {
+  .deal-inner {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 1.5rem !important;
+  }
+
+  .countdown-timer-wrap {
+    width: 100% !important;
+    padding: 1rem !important;
+  }
+
+  .countdown-boxes {
+    justify-content: center !important;
+  }
+
+  .category-tabs-bar {
+    width: 100% !important;
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: var(--radius-sm) !important;
+  }
+
+  .category-tabs-bar .tab-btn {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+/* --- 9. Checkout & Cart Mobile Responsiveness --- */
+@media (max-width: 900px) {
+  .cart-layout-grid,
+  .checkout-main-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+
+  .summary-card,
+  .checkout-summary-card {
+    position: static !important;
+    width: 100% !important;
+  }
+
+  .form-fields-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .cart-page-item {
+    gap: 0.85rem !important;
+    padding: 0.85rem !important;
+  }
+
+  .item-thumbnail {
+    width: 68px !important;
+    height: 68px !important;
+  }
+
+  .item-title {
+    font-size: 1rem !important;
+  }
+
+  .cart-summary-column,
+  .checkout-summary-column {
+    order: 2;
+  }
+}
+
+/* --- 10. Admin Dashboard & Tables Touch Responsiveness --- */
+@media (max-width: 900px) {
+  .admin-metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .metric-card {
+    padding: 1rem !important;
+  }
+
+  .metric-number {
+    font-size: 1.35rem !important;
+  }
+
+  .admin-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+  }
+
+  .admin-tabs-row {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    white-space: nowrap !important;
+  }
+
+  .admin-tab-btn {
+    flex-shrink: 0 !important;
+  }
+}
+
+/* --- 11. Header Mobile Tap Polish --- */
+.site-header {
+  padding-top: calc(0.65rem + var(--sat));
+}
+
+@media (max-width: 900px) {
+  .brand-wordmark .brand-title {
+    font-size: 1.05rem !important;
+  }
+
+  .brand-wordmark .brand-subtitle {
+    font-size: 0.55rem !important;
+  }
+}
+
