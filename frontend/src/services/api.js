@@ -1,16 +1,18 @@
 import { products as localProducts } from '../data/products.js'
 import { coupons as localCoupons, findCoupon as localFindCoupon } from '../data/coupons.js'
 
-const envApiUrl =
-  typeof import.meta !== 'undefined' && import.meta?.env?.VITE_API_URL
-    ? import.meta.env.VITE_API_URL
-    : typeof window !== 'undefined'
-    ? '' // In browser, use relative path so Vite proxy (dev) & Vercel rewrites (prod) route /api seamlessly
-    : typeof process !== 'undefined' && process?.env?.VITE_API_URL
-    ? process.env.VITE_API_URL
-    : 'http://localhost:5000'
+const isBrowser = typeof window !== 'undefined'
+const isLocalhost =
+  isBrowser &&
+  (window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.endsWith('.local'))
 
-const API_BASE = envApiUrl.replace(/\/$/, '')
+// In browser production/mobile, ALWAYS use relative path '' so requests go to current origin /api/...
+// In local dev, relative path '' is proxied by Vite to the backend port.
+const API_BASE = isBrowser
+  ? ''
+  : (typeof process !== 'undefined' && process?.env?.VITE_API_URL) || 'http://localhost:5000'
 
 // Helper to get stored auth token
 function getAuthHeader() {
