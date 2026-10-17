@@ -106,7 +106,6 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions))
-app.options('*', cors(corsOptions))
 
 // ============================================================
 // 5. BODY PARSERS & SANITIZATION (DOS & Injection Prevention)
