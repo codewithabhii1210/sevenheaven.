@@ -4,8 +4,8 @@ import { coupons as localCoupons, findCoupon as localFindCoupon } from '../data/
 const envApiUrl =
   typeof import.meta !== 'undefined' && import.meta?.env?.VITE_API_URL
     ? import.meta.env.VITE_API_URL
-    : typeof window !== 'undefined' && window.location?.hostname !== 'localhost'
-    ? ''
+    : typeof window !== 'undefined'
+    ? '' // In browser, use relative path so Vite proxy (dev) & Vercel rewrites (prod) route /api seamlessly
     : typeof process !== 'undefined' && process?.env?.VITE_API_URL
     ? process.env.VITE_API_URL
     : 'http://localhost:5000'
@@ -27,11 +27,21 @@ async function request(endpoint, options = {}) {
     ...options.headers,
   }
 
-  const res = await fetch(url, {
-    ...options,
-    headers,
-    credentials: 'include', // for HttpOnly cookies
-  })
+  let res
+  try {
+    res = await fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include', // for HttpOnly cookies
+    })
+  } catch (netErr) {
+    console.error(`[API Network Error on ${url}]:`, netErr)
+    throw new Error(
+      netErr.message === 'Failed to fetch' || netErr.message === 'fetch failed'
+        ? 'Unable to connect to order server. Please verify your internet or try again.'
+        : netErr.message || 'Network request failed'
+    )
+  }
 
   const data = await res.json().catch(() => ({}))
 

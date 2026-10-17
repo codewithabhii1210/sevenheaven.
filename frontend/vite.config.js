@@ -6,4 +6,12 @@ export default defineConfig({
   plugins: [react()],
   // Root level .env file use karega (folder ke bahar)
   envDir: '../',
+  server: {
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_URL || 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
+  },
 })

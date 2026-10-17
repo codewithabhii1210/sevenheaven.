@@ -90,18 +90,23 @@ const allowedOrigins = [
   'https://www.sevenheaven.co.in',
 ]
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, server-to-server)
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true)
-      }
-      return callback(null, true) // dev fallback
-    },
-    credentials: true, // Allow cookies over CORS
-  })
-)
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) return callback(null, true)
+    if (/^https:\/\/sevenheaven[a-z0-9-]*\.vercel\.app$/.test(origin)) return callback(null, true)
+    if (/^http:\/\/localhost:\d+$/.test(origin)) return callback(null, true)
+    if (/^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) return callback(null, true)
+    return callback(null, true) // dev fallback
+  },
+  credentials: true, // Allow cookies over CORS
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+}
+
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 
 // ============================================================
 // 5. BODY PARSERS & SANITIZATION (DOS & Injection Prevention)

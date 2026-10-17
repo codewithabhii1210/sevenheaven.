@@ -1663,6 +1663,11 @@ button {
 }
 
 /* Hero Trending Product Capsule */
+.hero-trending-container {
+  max-width: 460px;
+  margin-bottom: 1.5rem;
+}
+
 .hero-trending-card {
   display: block;
   background: rgba(18, 18, 24, 0.85);
@@ -1670,13 +1675,16 @@ button {
   border: 1px solid rgba(212, 175, 55, 0.25);
   border-radius: var(--radius-md);
   padding: 0.85rem 1rem;
-  margin-bottom: 1.5rem;
-  max-width: 460px;
   position: relative;
-  transition: all var(--transition-fast);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
   text-decoration: none;
   color: inherit;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.hero-trending-card.is-fading {
+  opacity: 0.2;
+  transform: translateY(4px);
 }
 
 .hero-trending-card:hover {
@@ -1797,6 +1805,33 @@ button {
   background: rgba(74, 222, 128, 0.12);
   padding: 0.1rem 0.35rem;
   border-radius: 2px;
+}
+
+.trending-dots-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 0.6rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.trending-dot {
+  height: 4px;
+  width: 8px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.trending-dot.active {
+  width: 24px;
+  background: var(--color-gold-gradient);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
 }
 
 .hero-actions {
@@ -6530,8 +6565,14 @@ button {
   }
 
   .mobile-sticky-bar .btn {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.85rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.82rem;
+  }
+
+  .mobile-sticky-btns {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 }
 

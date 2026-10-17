@@ -81,11 +81,11 @@ export default function ProductDetail() {
   const relatedProducts = allProducts.filter((p) => p.id !== product.id).slice(0, 4)
 
   const handleAddToCart = () => {
-    addItem(product, qty)
+    addItem(product, qty, false)
   }
 
   const handleBuyNow = () => {
-    addItem(product, qty)
+    addItem(product, qty, false)
     navigate('/checkout')
   }
 
@@ -514,14 +514,26 @@ export default function ProductDetail() {
           <span className="sticky-name">{product.name}</span>
           <span className="sticky-price">₹{product.price}</span>
         </div>
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          className="btn btn-gold btn-sm"
-        >
-          <ShoppingBag size={14} />
-          <span>Add to Bag</span>
-        </button>
+        <div className="mobile-sticky-btns">
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className="btn btn-gold-outline btn-sm mobile-sticky-add-btn"
+            aria-label="Add to bag"
+          >
+            <ShoppingBag size={14} />
+            <span>Add</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleBuyNow}
+            className="btn btn-gold btn-sm mobile-sticky-buy-btn"
+            aria-label="Buy now"
+          >
+            <Zap size={14} />
+            <span>Buy Now</span>
+          </button>
+        </div>
       </div>
     </div>
   )

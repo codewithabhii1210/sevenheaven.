@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import ProductCard from '../components/ProductCard.jsx'
 import { api } from '../services/api.js'
@@ -19,6 +19,7 @@ import {
   Award,
   MessageCircle,
   ShoppingBag,
+  Zap,
 } from 'lucide-react'
 
 export default function Home() {
@@ -42,6 +43,101 @@ export default function Home() {
     activeCategoryTab === 'all'
       ? productsList
       : productsList.filter((p) => p.category === activeCategoryTab)
+
+  // 3–4 Trending Products rotation system
+  const defaultTrending = [
+    {
+      id: 'sh7-primer-30ml',
+      slug: 'invisible-blur-primer',
+      name: 'Invisible Blur Primer',
+      subname: 'Smooth Blur Perfect • 30 ml',
+      categoryLabel: 'Flagship Cosmetic',
+      price: 499,
+      mrp: 699,
+      discount: 29,
+      rating: 4.8,
+      reviewsCount: 126,
+      image: '/images/products/invisible-blur-primer.png',
+    },
+    {
+      id: 'sh7-noir-essence-50',
+      slug: 'noir-essence',
+      name: 'Noir Essence',
+      subname: 'Dark Oud & Black Amber • 50 ml',
+      categoryLabel: 'Haute Fragrance',
+      price: 1299,
+      mrp: 1999,
+      discount: 35,
+      rating: 4.7,
+      reviewsCount: 84,
+      image: '/images/products/noir-essence.jpg',
+    },
+    {
+      id: 'sh7-golden-oud-100',
+      slug: 'golden-oud',
+      name: 'Golden Oud',
+      subname: 'Warm Saffron & Leather • 100 ml',
+      categoryLabel: 'Royal Haute Perfume',
+      price: 1799,
+      mrp: 2499,
+      discount: 28,
+      rating: 4.9,
+      reviewsCount: 67,
+      image: '/images/products/golden-oud.jpg',
+    },
+    {
+      id: 'sh7-lunar-nights-50',
+      slug: 'lunar-nights',
+      name: 'Lunar Nights',
+      subname: 'Velvet Moonlit Jasmine • 50 ml',
+      categoryLabel: 'Intimate Fragrance',
+      price: 1199,
+      mrp: 1699,
+      discount: 29,
+      rating: 4.6,
+      reviewsCount: 41,
+      image: '/images/products/lunar-nights.jpg',
+    },
+  ]
+
+  const trendingProducts = useMemo(() => {
+    if (productsList && productsList.length >= 3) {
+      return productsList.slice(0, 4).map((p) => ({
+        id: p.id,
+        slug: p.slug,
+        name: p.name,
+        subname: p.subname || `${p.size || ''}`,
+        categoryLabel: p.category === 'makeup' ? 'Flagship Cosmetic' : 'Haute Fragrance',
+        price: p.price,
+        mrp: p.mrp || Math.round(p.price * 1.35),
+        discount: p.mrp && p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 25,
+        rating: p.rating || 4.8,
+        reviewsCount: p.reviewsCount || 45,
+        image: p.image,
+      }))
+    }
+    return defaultTrending
+  }, [productsList])
+
+  const [trendingIndex, setTrendingIndex] = useState(0)
+  const [isRotating, setIsRotating] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+
+  useEffect(() => {
+    if (trendingProducts.length <= 1 || isHovered) return
+
+    const timer = setInterval(() => {
+      setIsRotating(true)
+      setTimeout(() => {
+        setTrendingIndex((prev) => (prev + 1) % trendingProducts.length)
+        setIsRotating(false)
+      }, 300)
+    }, 4000)
+
+    return () => clearInterval(timer)
+  }, [trendingProducts.length, isHovered])
+
+  const currentTrending = trendingProducts[trendingIndex] || trendingProducts[0]
 
   const copyCoupon = (code) => {
     navigator.clipboard.writeText(code)
@@ -72,49 +168,85 @@ export default function Home() {
               resins, and our acclaimed Invisible Blur Primer designed for high-definition radiance.
             </p>
 
-            {/* Trending Product Highlight Card */}
-            <Link
-              to="/product/invisible-blur-primer"
-              className="hero-trending-card"
-              aria-label="Trending Product: Invisible Blur Primer"
+            {/* Animated Trending Products Showcase (Rotates every 4s) */}
+            <div
+              className="hero-trending-container"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
             >
-              <div className="trending-pill">
-                <Flame size={12} className="flame-icon" />
-                <span>TRENDING NOW</span>
-              </div>
-              <div className="trending-body">
-                <div className="trending-img-wrap">
-                  <img
-                    src="/images/products/invisible-blur-primer.png"
-                    alt="Invisible Blur Primer"
-                    className="trending-thumb"
-                  />
+              <Link
+                to={`/product/${currentTrending.slug || currentTrending.id}`}
+                className={`hero-trending-card ${isRotating ? 'is-fading' : ''}`}
+                aria-label={`Trending Product: ${currentTrending.name}`}
+              >
+                <div className="trending-pill">
+                  <Flame size={12} className="flame-icon" />
+                  <span>TRENDING #{trendingIndex + 1}</span>
                 </div>
-                <div className="trending-details">
-                  <div className="trending-meta">
-                    <span className="trending-cat">Flagship Cosmetic</span>
-                    <span className="trending-rating">★ 4.8 (126)</span>
+
+                <div className="trending-body">
+                  <div className="trending-img-wrap">
+                    <img
+                      src={currentTrending.image}
+                      alt={currentTrending.name}
+                      className="trending-thumb"
+                    />
                   </div>
-                  <h3 className="trending-title">Invisible Blur Primer</h3>
-                  <p className="trending-sub">Smooth Blur Perfect • 30 ml</p>
-                  <div className="trending-price-row">
-                    <span className="trending-price">₹499</span>
-                    <span className="trending-mrp">₹699</span>
-                    <span className="trending-save">29% OFF</span>
+                  <div className="trending-details">
+                    <div className="trending-meta">
+                      <span className="trending-cat">{currentTrending.categoryLabel}</span>
+                      <span className="trending-rating">★ {currentTrending.rating} ({currentTrending.reviewsCount})</span>
+                    </div>
+                    <h3 className="trending-title">{currentTrending.name}</h3>
+                    <p className="trending-sub">{currentTrending.subname}</p>
+                    <div className="trending-price-row">
+                      <span className="trending-price">₹{currentTrending.price}</span>
+                      {currentTrending.mrp > currentTrending.price && (
+                        <span className="trending-mrp">₹{currentTrending.mrp}</span>
+                      )}
+                      {currentTrending.discount > 0 && (
+                        <span className="trending-save">{currentTrending.discount}% OFF</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
+
+                {/* Progress Indicators */}
+                <div className="trending-dots-bar">
+                  {trendingProducts.map((p, idx) => (
+                    <button
+                      key={p.id || idx}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setTrendingIndex(idx)
+                      }}
+                      className={`trending-dot ${idx === trendingIndex ? 'active' : ''}`}
+                      title={p.name}
+                      aria-label={`Select trending product: ${p.name}`}
+                    />
+                  ))}
+                </div>
+              </Link>
+            </div>
 
             <div className="hero-actions">
               <Link to="/shop" className="btn btn-gold btn-lg">
                 <span>Shop All Products</span>
                 <ArrowRight size={16} />
               </Link>
-              <Link to="/product/invisible-blur-primer" className="btn btn-gold-outline btn-lg">
-                <ShoppingBag size={15} />
-                <span>Buy Primer (₹499)</span>
-              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  addItem(currentTrending, 1, false)
+                  navigate('/checkout')
+                }}
+                className="btn btn-gold-outline btn-lg hero-buy-now-btn"
+              >
+                <Zap size={16} className="gold-text" />
+                <span>Buy Now • ₹{currentTrending.price}</span>
+              </button>
             </div>
 
             {/* Quick Hero Highlights */}

@@ -95,8 +95,8 @@ export function CartProvider({ children }) {
   const shippingFee = items.length === 0 ? 0 : isFreeShipping ? 0 : STANDARD_SHIPPING_FEE
   const amountNeededForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - discountedSubtotal)
 
-  const addItem = (product, qty = 1) => {
-    const pId = product.id || product.productId
+  const addItem = (product, qty = 1, openDrawer = false) => {
+    const pId = product.id || product.productId || product.slug
     setItems((prev) => {
       const idx = prev.findIndex((i) => i.productId === pId)
       if (idx > -1) {
@@ -121,7 +121,9 @@ export function CartProvider({ children }) {
       ]
     })
     showToast(`Added "${product.name}" to your Bag`, 'gold')
-    setIsCartOpen(true)
+    if (openDrawer) {
+      setIsCartOpen(true)
+    }
   }
 
   const removeItem = (productId) => {

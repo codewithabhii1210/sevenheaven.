@@ -3,6 +3,7 @@ import { Order, Product, Coupon } from '../models/index.js'
 import { optionalAuth, requireAuth } from '../middleware/auth.js'
 import { sanitize } from '../middleware/sanitize.js'
 import { orderLimiter } from '../middleware/rateLimiter.js'
+import { connectDB } from '../db.js'
 
 const router = Router()
 
@@ -19,6 +20,7 @@ function generateOrderNo() {
 // POST /api/orders — Secure order creation with strict input validation & rate limiting
 router.post('/', orderLimiter, optionalAuth, async (req, res) => {
   try {
+    await connectDB()
     const { items, address, paymentMethod, couponCode } = req.body || {}
 
     // 1. Validate items array
@@ -72,7 +74,10 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
         return res.status(400).json({ error: 'Item quantity must be between 1 and 20' })
       }
 
-      const p = await Product.findOne({ id: cleanProductId, active: true })
+      const p = await Product.findOne({
+        $or: [{ id: cleanProductId }, { slug: cleanProductId }],
+        active: true,
+      })
       if (!p) {
         return res.status(400).json({ error: `Product unavailable or out of stock: ${cleanProductId}` })
       }
@@ -171,7 +176,10 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       await Coupon.updateOne({ code: appliedCoupon.code }, { $inc: { usedCount: 1 } })
     }
     for (const item of verifiedItems) {
-      await Product.updateOne({ id: item.productId }, { $inc: { stock: -item.qty } })
+      await Product.updateOne(
+        { $or: [{ id: item.productId }, { slug: item.productId }] },
+        { $inc: { stock: -item.qty } }
+      )
     }
 
     res.status(201).json({
