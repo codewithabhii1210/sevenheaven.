@@ -14,6 +14,7 @@ import {
   CreditCard,
   ArrowRight,
   CheckCircle2,
+  MessageCircle,
 } from 'lucide-react'
 
 // Clean Social Icons (SVG)
@@ -221,50 +222,24 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Column 4: Newsletter VIP Club */}
+          {/* Column 4: WhatsApp VIP Club */}
           <div className="footer-col newsletter-col">
             <h4 className="footer-col-title">Join The VIP Circle</h4>
             <p className="newsletter-desc">
-              Subscribe to receive private invitations to new batch releases, member-only discounts, and
-              exclusive beauty consultations.
+              Connect directly with our fragrance masters for private batch releases, member-only discounts, and bespoke privileges on WhatsApp.
             </p>
-            {subscribed ? (
-              <div className="newsletter-success-box">
-                <CheckCircle2 size={18} className="gold-text" />
-                <span>You are on our private reserve list. Thank you!</span>
-              </div>
-            ) : (
-              <form onSubmit={handleNewsletterSubmit} className="newsletter-form">
-                <div className="newsletter-input-wrap">
-                  <input
-                    type="email"
-                    value={newsletterEmail}
-                    onChange={(e) => setNewsletterEmail(e.target.value)}
-                    placeholder="Enter your email address"
-                    className="newsletter-input"
-                    aria-label="Email address for VIP membership"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className="newsletter-submit-btn"
-                    disabled={subscribing}
-                    aria-label="Subscribe to newsletter"
-                  >
-                    {subscribing ? '...' : <ArrowRight size={16} />}
-                  </button>
-                </div>
-                <span className="newsletter-subtext">
-                  Strictly no spam. Unsubscribe at any time.
-                </span>
-              </form>
-            )}
-
-            <div className="footer-coupon-tip">
-              <span className="tip-badge">VIP OFFER</span>
-              <p>
-                Use code <strong className="gold-text">WELCOME10</strong> at checkout for 10% off your order.
-              </p>
+            <div className="footer-wa-wrap">
+              <a
+                href="https://wa.me/919201991418?text=join%20me%20to%20the%20whatsapp%20group"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="whatsapp-cta-btn footer-wa-btn"
+                aria-label="Join Seven Heaven VIP WhatsApp Group"
+              >
+                <MessageCircle size={18} className="wa-icon" />
+                <span>Join WhatsApp VIP Group</span>
+              </a>
+              <span className="footer-wa-subnote">Click to message &ldquo;join me to the whatsapp group&rdquo;</span>
             </div>
           </div>
         </div>

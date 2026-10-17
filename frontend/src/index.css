@@ -181,6 +181,16 @@ button {
   color: var(--color-text);
 }
 
+.section-heading-curated {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0.35rem 0;
+  color: var(--color-text);
+  letter-spacing: 0.01em;
+}
+
 .section-subtext {
   color: var(--color-text-muted);
   font-size: 0.95rem;
@@ -1649,7 +1659,144 @@ button {
   color: var(--color-text-muted);
   line-height: 1.7;
   max-width: 540px;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Hero Trending Product Capsule */
+.hero-trending-card {
+  display: block;
+  background: rgba(18, 18, 24, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.5rem;
+  max-width: 460px;
+  position: relative;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.hero-trending-card:hover {
+  border-color: var(--color-gold);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), var(--color-gold-glow);
+}
+
+.trending-pill {
+  position: absolute;
+  top: -10px;
+  left: 1rem;
+  background: var(--color-gold-gradient);
+  color: #000000;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 0.18rem 0.55rem;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+
+.trending-body {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 0.2rem;
+}
+
+.trending-img-wrap {
+  width: 60px;
+  height: 60px;
+  background: #0d0d12;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 4px;
+}
+
+.trending-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.trending-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.trending-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  margin-bottom: 0.15rem;
+}
+
+.trending-cat {
+  color: var(--color-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.trending-rating {
+  color: var(--color-gold-light);
+  font-weight: 700;
+}
+
+.trending-title {
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trending-sub {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  margin: 0.1rem 0 0.3rem;
+}
+
+.trending-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.trending-price {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-gold-light);
+  font-family: var(--font-display);
+}
+
+.trending-mrp {
+  font-size: 0.78rem;
+  text-decoration: line-through;
+  color: var(--color-text-dim);
+}
+
+.trending-save {
+  font-size: 0.68rem;
+  color: #4ade80;
+  font-weight: 700;
+  background: rgba(74, 222, 128, 0.12);
+  padding: 0.1rem 0.35rem;
+  border-radius: 2px;
 }
 
 .hero-actions {
@@ -2285,68 +2432,165 @@ button {
   color: #000000;
 }
 
-/* Testimonials Section */
+/* Testimonials Section (Compact 2-Column Grid) */
 .testimonials-section {
-  padding: 5rem 0;
+  padding: 4.5rem 0;
+  border-top: 1px solid var(--color-border-subtle);
+  background: radial-gradient(circle at 50% 100%, rgba(212, 175, 55, 0.04) 0%, transparent 60%), #0c0c10;
 }
 
 .testimonials-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  max-width: 860px;
+  margin: 0 auto;
 }
 
-.testimonial-card {
-  background: #13131a;
+.testimonial-card-compact {
+  background: #111116;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
-  padding: 2rem;
+  padding: 1.15rem 1.25rem;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  position: relative;
   transition: all var(--transition-normal);
 }
 
-.testimonial-card:hover {
-  border-color: var(--color-border-gold);
-  transform: translateY(-4px);
-  box-shadow: var(--color-gold-glow);
+.testimonial-card-compact:hover {
+  border-color: rgba(212, 175, 55, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 .testimonial-rating {
-  display: inline-flex;
-  gap: 3px;
-  margin-bottom: 1rem;
+  display: flex;
+  gap: 2px;
+  margin-bottom: 0.65rem;
 }
 
 .testimonial-quote {
-  font-size: 0.95rem;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--color-text-muted);
   font-style: italic;
-  color: var(--color-text);
-  line-height: 1.7;
-  margin: 0 0 1.5rem;
+  margin: 0 0 0.85rem;
+  flex: 1;
 }
 
 .testimonial-author {
   display: flex;
   flex-direction: column;
   border-top: 1px solid var(--color-border-subtle);
-  padding-top: 1rem;
+  padding-top: 0.65rem;
 }
 
 .author-name {
+  font-size: 0.82rem;
   font-weight: 700;
-  font-size: 0.92rem;
   color: var(--color-gold-light);
 }
 
 .author-location {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--color-text-dim);
+}
+
+/* VIP WhatsApp Community Section */
+.vip-whatsapp-section {
+  padding: 4rem 0 5rem;
+  background: #08080c;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.vip-whatsapp-card {
+  max-width: 680px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, rgba(20, 20, 28, 0.95) 0%, rgba(12, 12, 16, 0.98) 100%);
+  border: 1px solid rgba(37, 211, 102, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 2.25rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.7), 0 0 30px rgba(37, 211, 102, 0.08);
+}
+
+.vip-whatsapp-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.vip-whatsapp-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0.35rem 0 0.5rem;
+}
+
+.vip-whatsapp-desc {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  max-width: 460px;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.whatsapp-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  background: #25D366;
+  color: #000000;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-top: 0.15rem;
+  padding: 0.8rem 1.6rem;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  box-shadow: 0 4px 18px rgba(37, 211, 102, 0.35);
+  min-height: 44px;
+}
+
+.whatsapp-cta-btn:hover {
+  background: #20bd5a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(37, 211, 102, 0.5);
+  color: #000000;
+}
+
+.vip-whatsapp-subnote {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--color-text-dim);
+  margin-top: 0.75rem;
+  font-style: italic;
+}
+
+.footer-wa-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.footer-wa-btn {
+  width: 100%;
+  padding: 0.7rem 1.15rem;
+  font-size: 0.78rem;
+}
+
+.footer-wa-subnote {
+  font-size: 0.65rem;
+  color: var(--color-text-dim);
+  font-style: italic;
 }
 
 /* ============================================================
@@ -6637,6 +6881,83 @@ button {
   .brand-wordmark .brand-subtitle {
     font-size: 0.5rem !important;
     letter-spacing: 0.28em !important;
+  }
+
+  /* Hero Trending Card on Mobile */
+  .hero-trending-card {
+    max-width: 100%;
+    padding: 0.75rem 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .trending-img-wrap {
+    width: 52px;
+    height: 52px;
+  }
+
+  .trending-title {
+    font-size: 0.9rem;
+  }
+
+  .trending-sub {
+    font-size: 0.68rem;
+  }
+
+  .trending-price {
+    font-size: 0.98rem;
+  }
+
+  /* Compact 2-Column Reviews on Mobile */
+  .testimonials-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.65rem !important;
+    max-width: 100% !important;
+  }
+
+  .testimonial-card-compact {
+    padding: 0.75rem 0.8rem !important;
+    border-radius: var(--radius-sm);
+  }
+
+  .testimonial-quote {
+    font-size: 0.74rem !important;
+    line-height: 1.45 !important;
+    margin-bottom: 0.6rem !important;
+  }
+
+  .author-name {
+    font-size: 0.76rem !important;
+  }
+
+  .author-location {
+    font-size: 0.62rem !important;
+  }
+
+  /* VIP WhatsApp Card on Mobile */
+  .vip-whatsapp-card {
+    padding: 1.75rem 1.25rem !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .vip-whatsapp-title {
+    font-size: 1.4rem !important;
+  }
+
+  .vip-whatsapp-desc {
+    font-size: 0.82rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .whatsapp-cta-btn {
+    width: 100% !important;
+    padding: 0.75rem 1.25rem !important;
+    font-size: 0.8rem !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .testimonials-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 
