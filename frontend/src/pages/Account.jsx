@@ -22,6 +22,12 @@ import {
   CreditCard,
   ChevronRight,
   Truck,
+  Plus,
+  Edit2,
+  Trash2,
+  Check,
+  Home as HomeIcon,
+  Briefcase,
 } from 'lucide-react'
 
 export default function Account() {
@@ -52,6 +58,23 @@ export default function Account() {
   // Orders list
   const [orders, setOrders] = useState([])
   const [ordersLoading, setOrdersLoading] = useState(false)
+
+  // Address management state (Flipkart-Style Multi-Address)
+  const [addresses, setAddresses] = useState([])
+  const [addressesLoading, setAddressesLoading] = useState(false)
+  const [isAddingAddress, setIsAddingAddress] = useState(false)
+  const [editingAddressId, setEditingAddressId] = useState(null)
+  const [addressForm, setAddressForm] = useState({
+    name: user?.name || '',
+    phone: user?.phone || '',
+    line1: '',
+    city: 'Bhopal',
+    state: 'Madhya Pradesh',
+    pincode: '',
+    type: 'Home',
+    isDefault: false,
+  })
+  const [addressErrors, setAddressErrors] = useState({})
 
   // Order Details Modal / View
   const [selectedOrder, setSelectedOrder] = useState(null)
@@ -93,7 +116,7 @@ export default function Account() {
     }
   }, [routeOrderNo])
 
-  // Fetch orders when logged in
+  // Fetch orders and addresses when logged in
   useEffect(() => {
     if (isAuthenticated) {
       setOrdersLoading(true)
@@ -108,8 +131,132 @@ export default function Account() {
         .finally(() => {
           setOrdersLoading(false)
         })
+
+      setAddressesLoading(true)
+      api
+        .getAddresses()
+        .then((addrs) => {
+          if (Array.isArray(addrs)) {
+            setAddresses(addrs)
+          } else if (user?.addresses) {
+            setAddresses(user.addresses)
+          }
+        })
+        .catch((err) => {
+          console.warn('Addresses fetch error:', err.message)
+        })
+        .finally(() => {
+          setAddressesLoading(false)
+        })
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, user])
+
+  // Address validation helper
+  const validateAddressData = (data) => {
+    const errors = {}
+    if (!data.name || data.name.trim().length < 2) {
+      errors.name = 'Full customer name is required (min 2 characters)'
+    }
+    const cleanPhone = (data.phone || '').replace(/\D/g, '')
+    if (cleanPhone.length < 10) {
+      errors.phone = 'Valid 10-digit Indian mobile number is required'
+    }
+    if (!data.line1 || data.line1.trim().length < 5) {
+      errors.line1 = 'Detailed street address (house/flat no) is required'
+    }
+    if (!data.city || !data.city.trim()) {
+      errors.city = 'City name is required'
+    }
+    if (!data.pincode || !/^[1-9][0-9]{5}$/.test(data.pincode.trim())) {
+      errors.pincode = 'Valid 6-digit Indian postal pincode is required'
+    }
+    setAddressErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  // Address CRUD Handlers
+  const handleSaveAddress = async (e) => {
+    e.preventDefault()
+    if (!validateAddressData(addressForm)) {
+      showToast('Please fix address errors', 'info')
+      return
+    }
+
+    try {
+      if (editingAddressId) {
+        const res = await api.updateAddress(editingAddressId, addressForm)
+        if (res && res.addresses) {
+          setAddresses(res.addresses)
+          setEditingAddressId(null)
+          showToast('Address updated successfully!', 'gold')
+        }
+      } else {
+        const res = await api.addAddress(addressForm)
+        if (res && res.addresses) {
+          setAddresses(res.addresses)
+          setIsAddingAddress(false)
+          showToast('New delivery address saved!', 'gold')
+        }
+      }
+      setAddressForm({
+        name: user?.name || '',
+        phone: user?.phone || '',
+        line1: '',
+        city: 'Bhopal',
+        state: 'Madhya Pradesh',
+        pincode: '',
+        type: 'Home',
+        isDefault: false,
+      })
+    } catch (err) {
+      showToast(err.message || 'Failed to save address', 'info')
+    }
+  }
+
+  const handleDeleteAddress = async (e, addressId) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!window.confirm('Are you sure you want to remove this delivery address?')) return
+    try {
+      const res = await api.deleteAddress(addressId)
+      if (res && res.addresses) {
+        setAddresses(res.addresses)
+        showToast('Address removed', 'info')
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to delete address', 'info')
+    }
+  }
+
+  const handleSetDefaultAddress = async (e, addressId) => {
+    e.preventDefault()
+    e.stopPropagation()
+    try {
+      const res = await api.setDefaultAddress(addressId)
+      if (res && res.addresses) {
+        setAddresses(res.addresses)
+        showToast('Default address set!', 'gold')
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to set default address', 'info')
+    }
+  }
+
+  const startEditAddress = (addr) => {
+    setEditingAddressId(addr._id)
+    setIsAddingAddress(false)
+    setAddressForm({
+      name: addr.name || '',
+      phone: addr.phone || '',
+      line1: addr.line1 || '',
+      city: addr.city || 'Bhopal',
+      state: addr.state || 'Madhya Pradesh',
+      pincode: addr.pincode || '',
+      type: addr.type || 'Home',
+      isDefault: !!addr.isDefault,
+    })
+    setAddressErrors({})
+  }
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault()
@@ -387,6 +534,18 @@ export default function Account() {
             </button>
             <button
               role="tab"
+              aria-selected={activeTab === 'addresses'}
+              onClick={() => {
+                setActiveTab('addresses')
+                setSelectedOrder(null)
+              }}
+              className={`account-tab-btn ${activeTab === 'addresses' ? 'active' : ''}`}
+            >
+              <MapPin size={16} />
+              <span>Saved Addresses ({addresses.length})</span>
+            </button>
+            <button
+              role="tab"
               aria-selected={activeTab === 'profile'}
               onClick={() => {
                 setActiveTab('profile')
@@ -503,7 +662,342 @@ export default function Account() {
             </div>
           )}
 
-          {/* Tab 2: Profile Details */}
+          {/* Tab 2: Saved Addresses (Flipkart-Style Multi-Address Management) */}
+          {activeTab === 'addresses' && (
+            <div className="account-content-pane">
+              {/* Header Action Bar */}
+              <div className="addresses-pane-header">
+                <div>
+                  <h3 className="addresses-pane-title">Saved Delivery Addresses</h3>
+                  <p className="addresses-pane-sub">
+                    Manage your delivery destinations for rapid, one-click luxury checkout.
+                  </p>
+                </div>
+                {!isAddingAddress && !editingAddressId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingAddress(true)
+                      setEditingAddressId(null)
+                      setAddressForm({
+                        name: user?.name || '',
+                        phone: user?.phone || '',
+                        line1: '',
+                        city: 'Bhopal',
+                        state: 'Madhya Pradesh',
+                        pincode: '',
+                        type: 'Home',
+                        isDefault: addresses.length === 0,
+                      })
+                      setAddressErrors({})
+                    }}
+                    className="btn btn-gold btn-sm"
+                  >
+                    <Plus size={16} />
+                    <span>Add New Address</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Add / Edit Form Pane */}
+              {(isAddingAddress || editingAddressId) && (
+                <div className="account-address-form-card">
+                  <div className="form-card-header">
+                    <h4>{editingAddressId ? 'Edit Delivery Destination' : 'Add New Delivery Destination'}</h4>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingAddress(false)
+                        setEditingAddressId(null)
+                      }}
+                      className="address-cancel-btn"
+                    >
+                      <X size={16} />
+                      <span>Cancel</span>
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveAddress}>
+                    <div className="form-fields-grid">
+                      {/* Name */}
+                      <div className="field-group full-width">
+                        <label className="field-label">
+                          Full Name <span className="req">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={addressForm.name}
+                          onChange={(e) => {
+                            setAddressForm({ ...addressForm, name: e.target.value })
+                            if (addressErrors.name) setAddressErrors({ ...addressErrors, name: '' })
+                          }}
+                          placeholder="e.g. Devendra Sharma"
+                          className={`text-input ${addressErrors.name ? 'has-error' : ''}`}
+                          required
+                        />
+                        {addressErrors.name && <span className="field-error">{addressErrors.name}</span>}
+                      </div>
+
+                      {/* Phone */}
+                      <div className="field-group">
+                        <label className="field-label">
+                          Mobile Phone (+91) <span className="req">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          value={addressForm.phone}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 10)
+                            setAddressForm({ ...addressForm, phone: val })
+                            if (addressErrors.phone) setAddressErrors({ ...addressErrors, phone: '' })
+                          }}
+                          placeholder="10-digit mobile number"
+                          maxLength={10}
+                          className={`text-input ${addressErrors.phone ? 'has-error' : ''}`}
+                          required
+                        />
+                        {addressErrors.phone && <span className="field-error">{addressErrors.phone}</span>}
+                      </div>
+
+                      {/* Type */}
+                      <div className="field-group">
+                        <label className="field-label">Address Type</label>
+                        <div className="address-type-toggle">
+                          <label className={`type-choice ${addressForm.type === 'Home' ? 'active' : ''}`}>
+                            <input
+                              type="radio"
+                              name="accAddressType"
+                              value="Home"
+                              checked={addressForm.type === 'Home'}
+                              onChange={(e) => setAddressForm({ ...addressForm, type: e.target.value })}
+                            />
+                            <HomeIcon size={13} />
+                            <span>Home</span>
+                          </label>
+                          <label className={`type-choice ${addressForm.type === 'Work' ? 'active' : ''}`}>
+                            <input
+                              type="radio"
+                              name="accAddressType"
+                              value="Work"
+                              checked={addressForm.type === 'Work'}
+                              onChange={(e) => setAddressForm({ ...addressForm, type: e.target.value })}
+                            />
+                            <Briefcase size={13} />
+                            <span>Work</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Line 1 */}
+                      <div className="field-group full-width">
+                        <label className="field-label">
+                          Street Address & House/Flat No. <span className="req">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={addressForm.line1}
+                          onChange={(e) => {
+                            setAddressForm({ ...addressForm, line1: e.target.value })
+                            if (addressErrors.line1) setAddressErrors({ ...addressErrors, line1: '' })
+                          }}
+                          placeholder="e.g. 42 Arera Colony, Near Platinum Plaza"
+                          className={`text-input ${addressErrors.line1 ? 'has-error' : ''}`}
+                          required
+                        />
+                        {addressErrors.line1 && <span className="field-error">{addressErrors.line1}</span>}
+                      </div>
+
+                      {/* City */}
+                      <div className="field-group">
+                        <label className="field-label">
+                          City <span className="req">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={addressForm.city}
+                          onChange={(e) => {
+                            setAddressForm({ ...addressForm, city: e.target.value })
+                            if (addressErrors.city) setAddressErrors({ ...addressErrors, city: '' })
+                          }}
+                          placeholder="e.g. Bhopal"
+                          className={`text-input ${addressErrors.city ? 'has-error' : ''}`}
+                          required
+                        />
+                        {addressErrors.city && <span className="field-error">{addressErrors.city}</span>}
+                      </div>
+
+                      {/* State */}
+                      <div className="field-group">
+                        <label className="field-label">
+                          State <span className="req">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={addressForm.state}
+                          onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
+                          className="text-input"
+                          required
+                        />
+                      </div>
+
+                      {/* Pincode */}
+                      <div className="field-group full-width">
+                        <label className="field-label">
+                          Postal Pincode <span className="req">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={addressForm.pincode}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 6)
+                            setAddressForm({ ...addressForm, pincode: val })
+                            if (addressErrors.pincode) setAddressErrors({ ...addressErrors, pincode: '' })
+                          }}
+                          placeholder="6-digit Indian Pincode"
+                          maxLength={6}
+                          className={`text-input ${addressErrors.pincode ? 'has-error' : ''}`}
+                          required
+                        />
+                        {addressErrors.pincode && <span className="field-error">{addressErrors.pincode}</span>}
+                      </div>
+
+                      {/* Default checkbox */}
+                      <div className="field-group full-width default-checkbox-row">
+                        <label className="default-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={addressForm.isDefault}
+                            onChange={(e) => setAddressForm({ ...addressForm, isDefault: e.target.checked })}
+                          />
+                          <span>Set as default delivery address</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="address-form-actions" style={{ marginTop: '1.5rem' }}>
+                      <button type="submit" className="btn btn-gold btn-sm">
+                        <Check size={14} />
+                        <span>{editingAddressId ? 'Update Address' : 'Save Address'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingAddress(false)
+                          setEditingAddressId(null)
+                        }}
+                        className="btn btn-gold-outline btn-sm"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* Addresses List */}
+              {addressesLoading ? (
+                <div className="orders-loading">
+                  <Sparkles size={28} className="gold-text spinning" />
+                  <p>Retrieving your saved addresses...</p>
+                </div>
+              ) : addresses.length === 0 && !isAddingAddress && !editingAddressId ? (
+                <div className="orders-empty-card">
+                  <MapPin size={48} strokeWidth={1.2} className="gold-text" />
+                  <h3>No Saved Addresses</h3>
+                  <p>Save your home and office addresses to enjoy frictionless checkout.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingAddress(true)
+                      setAddressForm({
+                        name: user?.name || '',
+                        phone: user?.phone || '',
+                        line1: '',
+                        city: 'Bhopal',
+                        state: 'Madhya Pradesh',
+                        pincode: '',
+                        type: 'Home',
+                        isDefault: true,
+                      })
+                    }}
+                    className="btn btn-gold btn-sm"
+                  >
+                    <Plus size={14} />
+                    <span>Add First Address</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="account-addresses-grid">
+                  {addresses.map((addr) => (
+                    <div
+                      key={addr._id}
+                      className={`account-address-card ${addr.isDefault ? 'is-default-card' : ''}`}
+                    >
+                      <div className="address-card-top">
+                        <div className="address-meta-tags">
+                          <strong className="address-recipient-name">{addr.name}</strong>
+                          <span className="address-type-pill">
+                            {addr.type === 'Work' ? <Briefcase size={11} /> : <HomeIcon size={11} />}
+                            {addr.type || 'Home'}
+                          </span>
+                          {addr.isDefault && <span className="address-default-badge">DEFAULT</span>}
+                        </div>
+
+                        <div className="address-actions-row">
+                          <button
+                            type="button"
+                            onClick={() => startEditAddress(addr)}
+                            className="address-action-btn"
+                            title="Edit Address"
+                          >
+                            <Edit2 size={13} />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteAddress(e, addr._id)}
+                            className="address-action-btn delete"
+                            title="Delete Address"
+                          >
+                            <Trash2 size={13} />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="address-card-body">
+                        <p className="address-text-line">{addr.line1}</p>
+                        <p className="address-text-line">
+                          {addr.city}, {addr.state} – <strong>{addr.pincode}</strong>
+                        </p>
+                        <p className="address-phone-line">
+                          📞 <strong>+91 {addr.phone}</strong>
+                        </p>
+                      </div>
+
+                      <div className="address-card-footer">
+                        {addr.isDefault ? (
+                          <span className="default-indicator-text">
+                            <Check size={13} /> Primary Delivery Address
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => handleSetDefaultAddress(e, addr._id)}
+                            className="btn btn-gold-outline btn-xs"
+                          >
+                            Set as Default
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab 3: Profile Details */}
           {activeTab === 'profile' && (
             <div className="account-content-pane">
               <div className="profile-details-card">

@@ -179,6 +179,43 @@ export const api = {
     return await request('/api/auth/me')
   },
 
+  // ---------- SAVED ADDRESSES (Flipkart-Style) ----------
+  async getAddresses() {
+    try {
+      const data = await request('/api/auth/addresses')
+      return data?.addresses || []
+    } catch (err) {
+      console.warn('getAddresses fallback to empty:', err.message)
+      return []
+    }
+  },
+
+  async addAddress(addressData) {
+    return await request('/api/auth/addresses', {
+      method: 'POST',
+      body: JSON.stringify(addressData),
+    })
+  },
+
+  async updateAddress(addressId, addressData) {
+    return await request(`/api/auth/addresses/${addressId}`, {
+      method: 'PUT',
+      body: JSON.stringify(addressData),
+    })
+  },
+
+  async deleteAddress(addressId) {
+    return await request(`/api/auth/addresses/${addressId}`, {
+      method: 'DELETE',
+    })
+  },
+
+  async setDefaultAddress(addressId) {
+    return await request(`/api/auth/addresses/${addressId}/default`, {
+      method: 'PATCH',
+    })
+  },
+
   // ---------- CONTACT & NEWSLETTER ----------
   async sendContact(data) {
     return await request('/api/contact', {

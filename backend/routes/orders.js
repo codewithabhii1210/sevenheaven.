@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { Order, Product, Coupon } from '../models/index.js'
+import { Order, Product, Coupon, User } from '../models/index.js'
 import { optionalAuth, requireAuth } from '../middleware/auth.js'
 import { sanitize } from '../middleware/sanitize.js'
 import { orderLimiter } from '../middleware/rateLimiter.js'
@@ -144,6 +144,26 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
     // 8. Grand Total (all inclusive)
     const total = discountedSubtotal + shippingFee + codFee
 
+    // 8.1 Prevent duplicate order creation on rapid double clicks (10s window)
+    const recentDuplicate = await Order.findOne({
+      $or: [
+        ...(req.auth?.id ? [{ userId: req.auth.id }] : []),
+        { 'address.phone': cleanPhone },
+      ],
+      paymentMethod: cleanPayment,
+      total,
+      createdAt: { $gte: new Date(Date.now() - 10000) },
+    })
+
+    if (recentDuplicate) {
+      return res.status(200).json({
+        success: true,
+        orderNo: recentDuplicate.orderNo,
+        order: recentDuplicate,
+        duplicatePrevented: true,
+      })
+    }
+
     // 9. Create order record
     const orderNo = generateOrderNo()
     const order = await Order.create({
@@ -170,6 +190,34 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       },
       placedAt: new Date(),
     })
+
+    // Auto-save delivery address to user's saved addresses in database for returning visits
+    if (req.auth?.id) {
+      try {
+        const u = await User.findById(req.auth.id)
+        if (u) {
+          const hasMatching = (u.addresses || []).some(
+            (a) => a.pincode === cleanPincode && a.line1.toLowerCase() === cleanLine1.toLowerCase()
+          )
+          if (!hasMatching) {
+            const isFirst = !u.addresses || u.addresses.length === 0
+            u.addresses.push({
+              name: cleanName,
+              phone: cleanPhone,
+              line1: cleanLine1,
+              city: cleanCity,
+              state: cleanState,
+              pincode: cleanPincode,
+              type: 'Home',
+              isDefault: isFirst,
+            })
+            await u.save()
+          }
+        }
+      } catch (addrErr) {
+        console.warn('Address auto-save warning:', addrErr.message)
+      }
+    }
 
     // Deduct stock and increment coupon usage asynchronously
     if (appliedCoupon?.code) {

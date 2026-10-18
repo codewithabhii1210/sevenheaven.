@@ -16,8 +16,14 @@ import {
   Mail,
   MapPin,
   Sparkles,
-  ShoppingBag,
+  Plus,
+  Edit2,
+  Trash2,
+  Check,
+  Home as HomeIcon,
+  Briefcase,
   AlertCircle,
+  X,
 } from 'lucide-react'
 
 // Helper to load Razorpay checkout script dynamically
@@ -46,19 +52,48 @@ export default function Checkout() {
     clearCart,
   } = useCart()
 
-  const { user } = useAuth()
+  const { user, isAuthenticated } = useAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
 
-  // Form State
-  const [formData, setFormData] = useState({
+  // ------------------------------------------------------------
+  // SAVED ADDRESSES (Flipkart-Style Multi-Address Management)
+  // ------------------------------------------------------------
+  const [savedAddresses, setSavedAddresses] = useState([])
+  const [selectedAddressId, setSelectedAddressId] = useState(null)
+  const [isAddingNewAddress, setIsAddingNewAddress] = useState(false)
+  const [editingAddressId, setEditingAddressId] = useState(null)
+  const [addressLoading, setAddressLoading] = useState(false)
+
+  // Guest Address State (stored in localStorage for returning visitors)
+  const [guestFormData, setGuestFormData] = useState(() => {
+    try {
+      const stored = localStorage.getItem('sh7_guest_address')
+      if (stored) return JSON.parse(stored)
+    } catch {
+      // ignore
+    }
+    return {
+      name: user?.name || '',
+      phone: user?.phone || '',
+      email: user?.email || '',
+      line1: '',
+      city: 'Bhopal',
+      state: 'Madhya Pradesh',
+      pincode: localStorage.getItem('sh7_pincode') || '',
+    }
+  })
+
+  // Address Form State (used for adding / editing addresses)
+  const [addressForm, setAddressForm] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
-    email: user?.email || '',
     line1: '',
     city: 'Bhopal',
     state: 'Madhya Pradesh',
     pincode: localStorage.getItem('sh7_pincode') || '',
+    type: 'Home',
+    isDefault: false,
   })
 
   // Payment Method: 'razorpay' | 'cod'
@@ -80,70 +115,258 @@ export default function Checkout() {
     }
   }, [items, confirmedOrder, navigate])
 
-  const handleInputChange = (e) => {
+  // Fetch saved addresses if authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      setAddressLoading(true)
+      api
+        .getAddresses()
+        .then((addrs) => {
+          if (Array.isArray(addrs) && addrs.length > 0) {
+            setSavedAddresses(addrs)
+            // Pre-select default address or first address
+            const defaultAddr = addrs.find((a) => a.isDefault) || addrs[0]
+            setSelectedAddressId(defaultAddr._id)
+          } else if (user?.addresses && user.addresses.length > 0) {
+            setSavedAddresses(user.addresses)
+            const defaultAddr = user.addresses.find((a) => a.isDefault) || user.addresses[0]
+            setSelectedAddressId(defaultAddr._id)
+          } else {
+            setSavedAddresses([])
+            setIsAddingNewAddress(true)
+          }
+        })
+        .catch((err) => {
+          console.warn('Failed to load saved addresses:', err.message)
+        })
+        .finally(() => {
+          setAddressLoading(false)
+        })
+    }
+  }, [isAuthenticated, user])
+
+  // Auto-save guest address to localStorage for returning visitors
+  useEffect(() => {
+    if (!isAuthenticated) {
+      try {
+        localStorage.setItem('sh7_guest_address', JSON.stringify(guestFormData))
+      } catch {
+        // ignore
+      }
+    }
+  }, [guestFormData, isAuthenticated])
+
+  // Selected address object for logged-in user
+  const activeSelectedAddress = savedAddresses.find((a) => a._id === selectedAddressId) || null
+
+  const handleGuestInputChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    setGuestFormData((prev) => ({ ...prev, [name]: value }))
     if (formErrors[name]) {
       setFormErrors((prev) => ({ ...prev, [name]: '' }))
     }
   }
 
-  // Strict Address Validation matching backend sanitize.js
-  const validateForm = () => {
+  const handleAddressFormChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setAddressForm((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }))
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({ ...prev, [name]: '' }))
+    }
+  }
+
+  // Address validation
+  const validateAddressData = (data) => {
     const errors = {}
-    if (!formData.name.trim() || formData.name.trim().length < 2) {
-      errors.name = 'Please enter your full name (at least 2 characters)'
+    if (!data.name || data.name.trim().length < 2) {
+      errors.name = 'Full customer name is required (min 2 characters)'
     }
-    const cleanPhone = formData.phone.replace(/\D/g, '')
+    const cleanPhone = (data.phone || '').replace(/\D/g, '')
     if (cleanPhone.length < 10) {
-      errors.phone = 'Please enter a valid 10-digit Indian mobile number'
+      errors.phone = 'Valid 10-digit Indian phone number is required'
     }
-    if (formData.email && !formData.email.includes('@')) {
-      errors.email = 'Please enter a valid email address'
+    if (data.email !== undefined && data.email && !data.email.includes('@')) {
+      errors.email = 'Valid email address is required'
     }
-    if (!formData.line1.trim() || formData.line1.trim().length < 5) {
-      errors.line1 = 'Please enter detailed address line (house/flat no, street)'
+    if (!data.line1 || data.line1.trim().length < 5) {
+      errors.line1 = 'Detailed street address (house/flat no) is required'
     }
-    if (!formData.city.trim()) {
-      errors.city = 'Please enter your city'
+    if (!data.city || !data.city.trim()) {
+      errors.city = 'City name is required'
     }
-    if (!/^[1-9][0-9]{5}$/.test(formData.pincode.trim())) {
-      errors.pincode = 'Please enter a valid 6-digit postal pincode'
+    if (!data.pincode || !/^[1-9][0-9]{5}$/.test(data.pincode.trim())) {
+      errors.pincode = 'Valid 6-digit Indian postal pincode is required'
     }
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }
 
+  // Save New Address
+  const handleSaveNewAddress = async (e) => {
+    e.preventDefault()
+    if (!validateAddressData(addressForm)) {
+      showToast('Please fix address errors', 'info')
+      return
+    }
+
+    try {
+      const res = await api.addAddress(addressForm)
+      if (res && res.addresses) {
+        setSavedAddresses(res.addresses)
+        const addedId = res.address?._id || res.addresses[res.addresses.length - 1]?._id
+        setSelectedAddressId(addedId)
+        setIsAddingNewAddress(false)
+        showToast('New delivery address saved!', 'gold')
+        // Reset form
+        setAddressForm({
+          name: user?.name || '',
+          phone: user?.phone || '',
+          line1: '',
+          city: 'Bhopal',
+          state: 'Madhya Pradesh',
+          pincode: localStorage.getItem('sh7_pincode') || '',
+          type: 'Home',
+          isDefault: false,
+        })
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to save address', 'info')
+    }
+  }
+
+  // Edit Existing Address Submit
+  const handleUpdateAddress = async (e) => {
+    e.preventDefault()
+    if (!validateAddressData(addressForm)) {
+      showToast('Please fix address errors', 'info')
+      return
+    }
+
+    try {
+      const res = await api.updateAddress(editingAddressId, addressForm)
+      if (res && res.addresses) {
+        setSavedAddresses(res.addresses)
+        setEditingAddressId(null)
+        showToast('Address updated successfully!', 'gold')
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to update address', 'info')
+    }
+  }
+
+  // Delete Address
+  const handleDeleteAddress = async (e, addressId) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!window.confirm('Are you sure you want to delete this delivery address?')) return
+
+    try {
+      const res = await api.deleteAddress(addressId)
+      if (res && res.addresses) {
+        setSavedAddresses(res.addresses)
+        if (selectedAddressId === addressId) {
+          const defaultAddr = res.addresses.find((a) => a.isDefault) || res.addresses[0]
+          setSelectedAddressId(defaultAddr?._id || null)
+        }
+        showToast('Address removed', 'info')
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to delete address', 'info')
+    }
+  }
+
+  // Set Address as Default
+  const handleSetDefaultAddress = async (e, addressId) => {
+    e.preventDefault()
+    e.stopPropagation()
+    try {
+      const res = await api.setDefaultAddress(addressId)
+      if (res && res.addresses) {
+        setSavedAddresses(res.addresses)
+        setSelectedAddressId(addressId)
+        showToast('Default address updated!', 'gold')
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to set default address', 'info')
+    }
+  }
+
+  // Start Editing an Address
+  const startEditingAddress = (e, addr) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setEditingAddressId(addr._id)
+    setAddressForm({
+      name: addr.name || '',
+      phone: addr.phone || '',
+      line1: addr.line1 || '',
+      city: addr.city || 'Bhopal',
+      state: addr.state || 'Madhya Pradesh',
+      pincode: addr.pincode || '',
+      type: addr.type || 'Home',
+      isDefault: !!addr.isDefault,
+    })
+    setFormErrors({})
+  }
+
+  // ------------------------------------------------------------
+  // PLACE ORDER HANDLER (Robust, Duplicate-Proof, Never Stuck)
+  // ------------------------------------------------------------
   const handlePlaceOrder = async (e) => {
     e.preventDefault()
-    if (!validateForm()) {
-      showToast('Please fix the errors in your shipping address', 'info')
-      return
+    if (isSubmitting) return
+
+    // 1. Gather delivery address
+    let orderAddress = null
+    if (isAuthenticated && savedAddresses.length > 0) {
+      if (!activeSelectedAddress) {
+        showToast('Please select a delivery address', 'info')
+        return
+      }
+      orderAddress = {
+        name: activeSelectedAddress.name.trim(),
+        phone: activeSelectedAddress.phone.replace(/\D/g, ''),
+        email: user?.email || '',
+        line1: activeSelectedAddress.line1.trim(),
+        city: activeSelectedAddress.city.trim(),
+        state: activeSelectedAddress.state.trim(),
+        pincode: activeSelectedAddress.pincode.trim(),
+      }
+    } else {
+      // Validate guest address
+      if (!validateAddressData(guestFormData)) {
+        showToast('Please complete all required shipping address fields', 'info')
+        return
+      }
+      orderAddress = {
+        name: guestFormData.name.trim(),
+        phone: guestFormData.phone.replace(/\D/g, ''),
+        email: guestFormData.email.trim(),
+        line1: guestFormData.line1.trim(),
+        city: guestFormData.city.trim(),
+        state: guestFormData.state.trim(),
+        pincode: guestFormData.pincode.trim(),
+      }
     }
 
     setIsSubmitting(true)
 
     try {
-      // 1. Prepare Order Payload
+      // 2. Prepare Order Payload
       const orderPayload = {
         items: items.map((i) => ({
           productId: i.productId,
           qty: i.qty,
         })),
-        address: {
-          name: formData.name.trim(),
-          phone: formData.phone.replace(/\D/g, ''),
-          email: formData.email.trim(),
-          line1: formData.line1.trim(),
-          city: formData.city.trim(),
-          state: formData.state.trim(),
-          pincode: formData.pincode.trim(),
-        },
+        address: orderAddress,
         paymentMethod,
         couponCode: appliedCoupon?.code || null,
       }
 
-      // 2. Create Order in Backend API
+      // 3. Create Order in Backend API
       const orderRes = await api.createOrder(orderPayload)
       if (!orderRes || !orderRes.orderNo) {
         throw new Error(orderRes?.error || 'Failed to initiate order')
@@ -151,20 +374,20 @@ export default function Checkout() {
 
       const orderNo = orderRes.orderNo
 
-      // 3. Handle Cash on Delivery (COD)
+      // 4. Handle Cash on Delivery (COD)
       if (paymentMethod === 'cod') {
         clearCart()
         setConfirmedOrder(orderRes.order)
-        showToast(`Order ${orderNo} confirmed via Cash on Delivery!`, 'gold')
+        showToast(`Order ${orderNo} placed successfully via Cash on Delivery!`, 'gold')
         setIsSubmitting(false)
         return
       }
 
-      // 4. Handle Razorpay Online Payment
+      // 5. Handle Razorpay Online Payment
       if (paymentMethod === 'razorpay') {
         const scriptLoaded = await loadRazorpayScript()
         if (!scriptLoaded) {
-          throw new Error('Razorpay payment gateway failed to load. Please try COD.')
+          throw new Error('Razorpay payment gateway failed to load. Please use Cash on Delivery.')
         }
 
         const rzpOrderData = await api.createRazorpayOrder(orderNo)
@@ -173,7 +396,7 @@ export default function Checkout() {
         }
 
         const options = {
-          key: rzpOrderData.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
+          key: rzpOrderData.keyId || 'rzp_test_ToeDcL6X72kGWz',
           amount: rzpOrderData.amount,
           currency: rzpOrderData.currency || 'INR',
           name: 'Seven Heaven Cosmetics',
@@ -181,16 +404,15 @@ export default function Checkout() {
           image: '/images/logo-seven-heaven.png',
           order_id: rzpOrderData.razorpayOrderId,
           prefill: {
-            name: formData.name,
-            email: formData.email,
-            contact: formData.phone,
+            name: orderAddress.name,
+            email: orderAddress.email,
+            contact: orderAddress.phone,
           },
           theme: {
             color: '#D4AF37', // Gold branding
           },
           handler: async (response) => {
             try {
-              // Verify Signature with Timing-Safe HMAC-SHA256 in Backend
               const verifyRes = await api.verifyRazorpay({
                 orderNo,
                 razorpay_order_id: response.razorpay_order_id,
@@ -221,16 +443,22 @@ export default function Checkout() {
           },
         }
 
-        const rzp = new window.Razorpay(options)
-        rzp.on('payment.failed', (failResponse) => {
+        try {
+          const rzp = new window.Razorpay(options)
+          rzp.on('payment.failed', (failResponse) => {
+            setIsSubmitting(false)
+            showToast(`Payment failed: ${failResponse.error?.description || 'Payment rejected'}`, 'info')
+          })
+          rzp.open()
+        } catch (openErr) {
+          console.error('Razorpay open error:', openErr)
           setIsSubmitting(false)
-          showToast(`Payment failed: ${failResponse.error?.description || 'Unknown error'}`, 'info')
-        })
-        rzp.open()
+          showToast('Failed to open payment gateway. Please choose Cash on Delivery.', 'info')
+        }
       }
     } catch (err) {
-      console.error('Checkout error:', err)
-      showToast(err.message || 'Failed to complete order. Please try again.', 'info')
+      console.error('Checkout Error:', err)
+      showToast(err.message || 'Failed to place order. Please try again.', 'info')
       setIsSubmitting(false)
     }
   }
@@ -256,7 +484,8 @@ export default function Checkout() {
             <span className="order-no-label">ORDER NUMBER</span>
             <strong className="order-no-val">{confirmedOrder.orderNo}</strong>
             <span className="order-date">
-              Placed on {new Date(confirmedOrder.placedAt || Date.now()).toLocaleDateString('en-IN', {
+              Placed on{' '}
+              {new Date(confirmedOrder.placedAt || Date.now()).toLocaleDateString('en-IN', {
                 month: 'long',
                 day: 'numeric',
                 year: 'numeric',
@@ -273,9 +502,10 @@ export default function Checkout() {
               <p className="detail-name">{confirmedOrder.address?.name}</p>
               <p className="detail-line">{confirmedOrder.address?.line1}</p>
               <p className="detail-line">
-                {confirmedOrder.address?.city}, {confirmedOrder.address?.state} – {confirmedOrder.address?.pincode}
+                {confirmedOrder.address?.city}, {confirmedOrder.address?.state} –{' '}
+                {confirmedOrder.address?.pincode}
               </p>
-              <p className="detail-phone">📞 {confirmedOrder.address?.phone}</p>
+              <p className="detail-phone">📞 +91 {confirmedOrder.address?.phone}</p>
             </div>
 
             <div className="confirmation-detail-box">
@@ -341,8 +571,8 @@ export default function Checkout() {
               <span>Return to Catalog</span>
               <ArrowRight size={16} />
             </Link>
-            <Link to="/my-account" className="btn btn-gold-outline btn-lg">
-              View Order in My Account
+            <Link to={`/order/${confirmedOrder.orderNo}`} className="btn btn-gold-outline btn-lg">
+              Inspect Live Order Details
             </Link>
           </div>
         </div>
@@ -368,143 +598,458 @@ export default function Checkout() {
         <form onSubmit={handlePlaceOrder} className="checkout-main-grid">
           {/* Left Column: Shipping Address & Payment Selection */}
           <div className="checkout-form-column">
-            {/* 1. Shipping Address Card */}
+            {/* 1. Shipping Address Card (Flipkart-Style) */}
             <div className="checkout-card">
               <div className="card-header-row">
                 <div className="step-badge">1</div>
                 <div>
-                  <h3 className="card-title">Shipping Address</h3>
-                  <p className="card-subtitle">Where should we deliver your luxury parcel?</p>
+                  <h3 className="card-title">Delivery Address</h3>
+                  <p className="card-subtitle">
+                    {isAuthenticated
+                      ? 'Select from your saved addresses or add a new delivery destination'
+                      : 'Where should we deliver your luxury parcel?'}
+                  </p>
                 </div>
               </div>
 
-              <div className="form-fields-grid">
-                {/* Full Name */}
-                <div className="field-group full-width">
-                  <label htmlFor="name" className="field-label">
-                    Full Name <span className="req">*</span>
-                  </label>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="e.g. Devendra Sharma"
-                    className={`text-input ${formErrors.name ? 'has-error' : ''}`}
-                    required
-                  />
-                  {formErrors.name && <span className="field-error">{formErrors.name}</span>}
-                </div>
+              {/* LOGGED IN: SAVED ADDRESSES SELECTOR */}
+              {isAuthenticated && savedAddresses.length > 0 && !isAddingNewAddress && !editingAddressId && (
+                <div className="saved-addresses-list">
+                  {savedAddresses.map((addr) => {
+                    const isSelected = addr._id === selectedAddressId
+                    return (
+                      <div
+                        key={addr._id}
+                        onClick={() => setSelectedAddressId(addr._id)}
+                        className={`address-radio-card ${isSelected ? 'selected' : ''}`}
+                      >
+                        <div className="address-card-top">
+                          <div className="address-radio-wrap">
+                            <input
+                              type="radio"
+                              name="selectedAddress"
+                              checked={isSelected}
+                              onChange={() => setSelectedAddressId(addr._id)}
+                            />
+                            <strong className="address-recipient-name">{addr.name}</strong>
+                            <span className="address-type-pill">
+                              {addr.type === 'Work' ? <Briefcase size={11} /> : <HomeIcon size={11} />}
+                              {addr.type || 'Home'}
+                            </span>
+                            {addr.isDefault && <span className="address-default-badge">DEFAULT</span>}
+                          </div>
 
-                {/* Mobile Phone */}
-                <div className="field-group">
-                  <label htmlFor="phone" className="field-label">
-                    Mobile Phone (+91) <span className="req">*</span>
-                  </label>
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="10-digit mobile number"
-                    maxLength={10}
-                    className={`text-input ${formErrors.phone ? 'has-error' : ''}`}
-                    required
-                  />
-                  {formErrors.phone && <span className="field-error">{formErrors.phone}</span>}
-                </div>
+                          <div className="address-actions-row" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              onClick={(e) => startEditingAddress(e, addr)}
+                              className="address-action-btn"
+                              title="Edit Address"
+                            >
+                              <Edit2 size={13} />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteAddress(e, addr._id)}
+                              className="address-action-btn delete"
+                              title="Delete Address"
+                            >
+                              <Trash2 size={13} />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        </div>
 
-                {/* Email Address */}
-                <div className="field-group">
-                  <label htmlFor="email" className="field-label">
-                    Email Address <span className="req">*</span>
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="For order receipt & tracking"
-                    className={`text-input ${formErrors.email ? 'has-error' : ''}`}
-                    required
-                  />
-                  {formErrors.email && <span className="field-error">{formErrors.email}</span>}
-                </div>
+                        <div className="address-card-body">
+                          <p className="address-text-line">{addr.line1}</p>
+                          <p className="address-text-line">
+                            {addr.city}, {addr.state} – <strong>{addr.pincode}</strong>
+                          </p>
+                          <p className="address-phone-line">
+                            📞 <strong>+91 {addr.phone}</strong>
+                          </p>
+                        </div>
 
-                {/* Address Line 1 */}
-                <div className="field-group full-width">
-                  <label htmlFor="line1" className="field-label">
-                    Street Address & House/Flat No. <span className="req">*</span>
-                  </label>
-                  <input
-                    id="line1"
-                    name="line1"
-                    type="text"
-                    value={formData.line1}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 42 Arera Colony, Near Platinum Plaza"
-                    className={`text-input ${formErrors.line1 ? 'has-error' : ''}`}
-                    required
-                  />
-                  {formErrors.line1 && <span className="field-error">{formErrors.line1}</span>}
-                </div>
+                        <div className="address-deliver-here-row">
+                          {isSelected ? (
+                            <span className="deliver-here-badge">
+                              <Check size={13} /> Deliver to this Address
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedAddressId(addr._id)}
+                              className="btn btn-gold-outline btn-xs"
+                            >
+                              Deliver Here
+                            </button>
+                          )}
+                          {!addr.isDefault && isSelected && (
+                            <button
+                              type="button"
+                              onClick={(e) => handleSetDefaultAddress(e, addr._id)}
+                              className="set-default-btn"
+                            >
+                              Set as Default
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
 
-                {/* City */}
-                <div className="field-group">
-                  <label htmlFor="city" className="field-label">
-                    City <span className="req">*</span>
-                  </label>
-                  <input
-                    id="city"
-                    name="city"
-                    type="text"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    placeholder="e.g. Bhopal"
-                    className={`text-input ${formErrors.city ? 'has-error' : ''}`}
-                    required
-                  />
-                  {formErrors.city && <span className="field-error">{formErrors.city}</span>}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingNewAddress(true)
+                      setEditingAddressId(null)
+                    }}
+                    className="btn btn-gold-outline btn-sm add-new-address-btn"
+                  >
+                    <Plus size={16} />
+                    <span>Add a New Delivery Address</span>
+                  </button>
                 </div>
+              )}
 
-                {/* State */}
-                <div className="field-group">
-                  <label htmlFor="state" className="field-label">
-                    State <span className="req">*</span>
-                  </label>
-                  <input
-                    id="state"
-                    name="state"
-                    type="text"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    className="text-input"
-                    required
-                  />
-                </div>
+              {/* LOGGED IN: ADD OR EDIT ADDRESS FORM */}
+              {isAuthenticated && (isAddingNewAddress || editingAddressId) && (
+                <div className="new-address-subform">
+                  <div className="new-address-header">
+                    <h4>{editingAddressId ? 'Edit Delivery Address' : 'Add New Delivery Destination'}</h4>
+                    {savedAddresses.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingNewAddress(false)
+                          setEditingAddressId(null)
+                        }}
+                        className="address-cancel-btn"
+                      >
+                        <X size={16} />
+                        <span>Cancel</span>
+                      </button>
+                    )}
+                  </div>
 
-                {/* Postal Pincode */}
-                <div className="field-group">
-                  <label htmlFor="pincode" className="field-label">
-                    Postal Pincode <span className="req">*</span>
-                  </label>
-                  <input
-                    id="pincode"
-                    name="pincode"
-                    type="text"
-                    value={formData.pincode}
-                    onChange={handleInputChange}
-                    placeholder="6-digit Indian Pincode"
-                    maxLength={6}
-                    className={`text-input ${formErrors.pincode ? 'has-error' : ''}`}
-                    required
-                  />
-                  {formErrors.pincode && <span className="field-error">{formErrors.pincode}</span>}
+                  <div className="form-fields-grid">
+                    {/* Full Name */}
+                    <div className="field-group full-width">
+                      <label className="field-label">
+                        Full Name <span className="req">*</span>
+                      </label>
+                      <input
+                        name="name"
+                        type="text"
+                        value={addressForm.name}
+                        onChange={handleAddressFormChange}
+                        placeholder="e.g. Devendra Sharma"
+                        className={`text-input ${formErrors.name ? 'has-error' : ''}`}
+                        required
+                      />
+                      {formErrors.name && <span className="field-error">{formErrors.name}</span>}
+                    </div>
+
+                    {/* Mobile Phone */}
+                    <div className="field-group">
+                      <label className="field-label">
+                        Mobile Phone (+91) <span className="req">*</span>
+                      </label>
+                      <input
+                        name="phone"
+                        type="tel"
+                        value={addressForm.phone}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 10)
+                          setAddressForm((prev) => ({ ...prev, phone: val }))
+                          if (formErrors.phone) setFormErrors((prev) => ({ ...prev, phone: '' }))
+                        }}
+                        placeholder="10-digit mobile number"
+                        maxLength={10}
+                        className={`text-input ${formErrors.phone ? 'has-error' : ''}`}
+                        required
+                      />
+                      {formErrors.phone && <span className="field-error">{formErrors.phone}</span>}
+                    </div>
+
+                    {/* Address Type */}
+                    <div className="field-group">
+                      <label className="field-label">Address Type</label>
+                      <div className="address-type-toggle">
+                        <label className={`type-choice ${addressForm.type === 'Home' ? 'active' : ''}`}>
+                          <input
+                            type="radio"
+                            name="type"
+                            value="Home"
+                            checked={addressForm.type === 'Home'}
+                            onChange={handleAddressFormChange}
+                          />
+                          <HomeIcon size={13} />
+                          <span>Home</span>
+                        </label>
+                        <label className={`type-choice ${addressForm.type === 'Work' ? 'active' : ''}`}>
+                          <input
+                            type="radio"
+                            name="type"
+                            value="Work"
+                            checked={addressForm.type === 'Work'}
+                            onChange={handleAddressFormChange}
+                          />
+                          <Briefcase size={13} />
+                          <span>Work</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Street Address */}
+                    <div className="field-group full-width">
+                      <label className="field-label">
+                        Street Address & House/Flat No. <span className="req">*</span>
+                      </label>
+                      <input
+                        name="line1"
+                        type="text"
+                        value={addressForm.line1}
+                        onChange={handleAddressFormChange}
+                        placeholder="e.g. 42 Arera Colony, Near Platinum Plaza"
+                        className={`text-input ${formErrors.line1 ? 'has-error' : ''}`}
+                        required
+                      />
+                      {formErrors.line1 && <span className="field-error">{formErrors.line1}</span>}
+                    </div>
+
+                    {/* City */}
+                    <div className="field-group">
+                      <label className="field-label">
+                        City <span className="req">*</span>
+                      </label>
+                      <input
+                        name="city"
+                        type="text"
+                        value={addressForm.city}
+                        onChange={handleAddressFormChange}
+                        placeholder="e.g. Bhopal"
+                        className={`text-input ${formErrors.city ? 'has-error' : ''}`}
+                        required
+                      />
+                      {formErrors.city && <span className="field-error">{formErrors.city}</span>}
+                    </div>
+
+                    {/* State */}
+                    <div className="field-group">
+                      <label className="field-label">
+                        State <span className="req">*</span>
+                      </label>
+                      <input
+                        name="state"
+                        type="text"
+                        value={addressForm.state}
+                        onChange={handleAddressFormChange}
+                        className="text-input"
+                        required
+                      />
+                    </div>
+
+                    {/* Pincode */}
+                    <div className="field-group full-width">
+                      <label className="field-label">
+                        Postal Pincode <span className="req">*</span>
+                      </label>
+                      <input
+                        name="pincode"
+                        type="text"
+                        value={addressForm.pincode}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 6)
+                          setAddressForm((prev) => ({ ...prev, pincode: val }))
+                          if (formErrors.pincode) setFormErrors((prev) => ({ ...prev, pincode: '' }))
+                        }}
+                        placeholder="6-digit Indian Pincode"
+                        maxLength={6}
+                        className={`text-input ${formErrors.pincode ? 'has-error' : ''}`}
+                        required
+                      />
+                      {formErrors.pincode && <span className="field-error">{formErrors.pincode}</span>}
+                    </div>
+
+                    {/* Default Checkbox */}
+                    <div className="field-group full-width default-checkbox-row">
+                      <label className="default-checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="isDefault"
+                          checked={addressForm.isDefault}
+                          onChange={handleAddressFormChange}
+                        />
+                        <span>Make this my default delivery address</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="address-form-actions">
+                    <button
+                      type="button"
+                      onClick={editingAddressId ? handleUpdateAddress : handleSaveNewAddress}
+                      className="btn btn-gold btn-sm"
+                    >
+                      <span>{editingAddressId ? 'Update Address' : 'Save & Deliver Here'}</span>
+                      <Check size={14} />
+                    </button>
+                    {savedAddresses.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingNewAddress(false)
+                          setEditingAddressId(null)
+                        }}
+                        className="btn btn-gold-outline btn-sm"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* GUEST: STANDARD ADDRESS FORM (Pre-filled from previous visits) */}
+              {!isAuthenticated && (
+                <div className="form-fields-grid">
+                  {/* Full Name */}
+                  <div className="field-group full-width">
+                    <label htmlFor="name" className="field-label">
+                      Full Name <span className="req">*</span>
+                    </label>
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      value={guestFormData.name}
+                      onChange={handleGuestInputChange}
+                      placeholder="e.g. Devendra Sharma"
+                      className={`text-input ${formErrors.name ? 'has-error' : ''}`}
+                      required
+                    />
+                    {formErrors.name && <span className="field-error">{formErrors.name}</span>}
+                  </div>
+
+                  {/* Mobile Phone */}
+                  <div className="field-group">
+                    <label htmlFor="phone" className="field-label">
+                      Mobile Phone (+91) <span className="req">*</span>
+                    </label>
+                    <input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={guestFormData.phone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 10)
+                        setGuestFormData((prev) => ({ ...prev, phone: val }))
+                        if (formErrors.phone) setFormErrors((prev) => ({ ...prev, phone: '' }))
+                      }}
+                      placeholder="10-digit mobile number"
+                      maxLength={10}
+                      className={`text-input ${formErrors.phone ? 'has-error' : ''}`}
+                      required
+                    />
+                    {formErrors.phone && <span className="field-error">{formErrors.phone}</span>}
+                  </div>
+
+                  {/* Email Address */}
+                  <div className="field-group">
+                    <label htmlFor="email" className="field-label">
+                      Email Address <span className="req">*</span>
+                    </label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={guestFormData.email}
+                      onChange={handleGuestInputChange}
+                      placeholder="For order receipt & tracking"
+                      className={`text-input ${formErrors.email ? 'has-error' : ''}`}
+                      required
+                    />
+                    {formErrors.email && <span className="field-error">{formErrors.email}</span>}
+                  </div>
+
+                  {/* Address Line 1 */}
+                  <div className="field-group full-width">
+                    <label htmlFor="line1" className="field-label">
+                      Street Address & House/Flat No. <span className="req">*</span>
+                    </label>
+                    <input
+                      id="line1"
+                      name="line1"
+                      type="text"
+                      value={guestFormData.line1}
+                      onChange={handleGuestInputChange}
+                      placeholder="e.g. 42 Arera Colony, Near Platinum Plaza"
+                      className={`text-input ${formErrors.line1 ? 'has-error' : ''}`}
+                      required
+                    />
+                    {formErrors.line1 && <span className="field-error">{formErrors.line1}</span>}
+                  </div>
+
+                  {/* City */}
+                  <div className="field-group">
+                    <label htmlFor="city" className="field-label">
+                      City <span className="req">*</span>
+                    </label>
+                    <input
+                      id="city"
+                      name="city"
+                      type="text"
+                      value={guestFormData.city}
+                      onChange={handleGuestInputChange}
+                      placeholder="e.g. Bhopal"
+                      className={`text-input ${formErrors.city ? 'has-error' : ''}`}
+                      required
+                    />
+                    {formErrors.city && <span className="field-error">{formErrors.city}</span>}
+                  </div>
+
+                  {/* State */}
+                  <div className="field-group">
+                    <label htmlFor="state" className="field-label">
+                      State <span className="req">*</span>
+                    </label>
+                    <input
+                      id="state"
+                      name="state"
+                      type="text"
+                      value={guestFormData.state}
+                      onChange={handleGuestInputChange}
+                      className="text-input"
+                      required
+                    />
+                  </div>
+
+                  {/* Postal Pincode */}
+                  <div className="field-group full-width">
+                    <label htmlFor="pincode" className="field-label">
+                      Postal Pincode <span className="req">*</span>
+                    </label>
+                    <input
+                      id="pincode"
+                      name="pincode"
+                      type="text"
+                      value={guestFormData.pincode}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 6)
+                        setGuestFormData((prev) => ({ ...prev, pincode: val }))
+                        if (formErrors.pincode) setFormErrors((prev) => ({ ...prev, pincode: '' }))
+                      }}
+                      placeholder="6-digit Indian Pincode"
+                      maxLength={6}
+                      className={`text-input ${formErrors.pincode ? 'has-error' : ''}`}
+                      required
+                    />
+                    {formErrors.pincode && <span className="field-error">{formErrors.pincode}</span>}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 2. Payment Method Selector */}
@@ -633,6 +1178,21 @@ export default function Checkout() {
                 </div>
 
                 <p className="inclusive-tax-note">All taxes inclusive (GST)</p>
+              </div>
+
+              {/* Delivery Destination Summary Preview */}
+              <div className="checkout-delivery-target-preview">
+                <MapPin size={14} className="gold-text" />
+                <div className="target-text">
+                  <span>Delivering to: </span>
+                  <strong>
+                    {isAuthenticated && activeSelectedAddress
+                      ? `${activeSelectedAddress.name} (${activeSelectedAddress.city}, ${activeSelectedAddress.pincode})`
+                      : guestFormData.name
+                      ? `${guestFormData.name} (${guestFormData.city || 'Bhopal'}, ${guestFormData.pincode || ''})`
+                      : 'Please specify address'}
+                  </strong>
+                </div>
               </div>
 
               {/* Place Order CTA Button */}

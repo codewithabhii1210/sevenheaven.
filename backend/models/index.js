@@ -123,6 +123,8 @@ const userSchema = new Schema(
         city: String,
         state: String,
         pincode: String,
+        type: { type: String, default: 'Home' }, // Home | Work | Other
+        isDefault: { type: Boolean, default: false },
       },
     ],
     role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
