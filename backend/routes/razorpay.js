@@ -4,6 +4,7 @@ import Razorpay from 'razorpay'
 import { Order } from '../models/index.js'
 import { sanitize } from '../middleware/sanitize.js'
 import { orderLimiter } from '../middleware/rateLimiter.js'
+import { connectDB } from '../db.js'
 
 const router = Router()
 
@@ -19,6 +20,7 @@ function getRazorpayInstance() {
 // Rate-limited and sanitized order initiation
 router.post('/create-order', orderLimiter, async (req, res) => {
   try {
+    await connectDB()
     const rawOrderNo = sanitize.string(req.body?.orderNo, 40)
     if (!rawOrderNo) {
       return res.status(400).json({ error: 'Valid orderNo is required' })
@@ -86,6 +88,7 @@ router.post('/create-order', orderLimiter, async (req, res) => {
 // Timing-safe signature verification preventing replay & timing attacks
 router.post('/verify', async (req, res) => {
   try {
+    await connectDB()
     const razorpay_order_id = sanitize.string(req.body?.razorpay_order_id, 100)
     const razorpay_payment_id = sanitize.string(req.body?.razorpay_payment_id, 100)
     const razorpay_signature = sanitize.string(req.body?.razorpay_signature, 255)
