@@ -61,6 +61,30 @@ export default function Account() {
   const [trackedOrder, setTrackedOrder] = useState(null)
   const [trackLoading, setTrackLoading] = useState(false)
 
+  const handleLookupOrder = async (queryNo) => {
+    const no = (queryNo || trackInput || '').trim()
+    if (!no) {
+      showToast('Please enter an order number (e.g. SH-261017-7484)', 'info')
+      return
+    }
+    setTrackLoading(true)
+    try {
+      const res = await api.getOrder(no)
+      if (res && res.order) {
+        setTrackedOrder(res.order)
+        showToast(`Order ${no} retrieved successfully`, 'gold')
+      } else {
+        setTrackedOrder(null)
+        showToast(`No order found matching "${no}"`, 'info')
+      }
+    } catch (err) {
+      setTrackedOrder(null)
+      showToast(err.message || 'Order lookup failed', 'info')
+    } finally {
+      setTrackLoading(false)
+    }
+  }
+
   // If route has orderNo, automatically look up that order
   useEffect(() => {
     if (routeOrderNo) {
@@ -128,30 +152,6 @@ export default function Account() {
       })
     } catch {
       // Error handled inside AuthContext
-    }
-  }
-
-  const handleLookupOrder = async (queryNo) => {
-    const no = (queryNo || trackInput || '').trim()
-    if (!no) {
-      showToast('Please enter an order number (e.g. SH-261017-7484)', 'info')
-      return
-    }
-    setTrackLoading(true)
-    try {
-      const res = await api.getOrder(no)
-      if (res && res.order) {
-        setTrackedOrder(res.order)
-        showToast(`Order ${no} retrieved successfully`, 'gold')
-      } else {
-        setTrackedOrder(null)
-        showToast(`No order found matching "${no}"`, 'info')
-      }
-    } catch (err) {
-      setTrackedOrder(null)
-      showToast(err.message || 'Order lookup failed', 'info')
-    } finally {
-      setTrackLoading(false)
     }
   }
 
@@ -292,6 +292,45 @@ export default function Account() {
         <div className="order-modal-support">
           <Truck size={16} className="gold-text" />
           <span>Bhopal Concierge Helpline: +91 92019 91418 • sevenheavencosmetics@gmail.com</span>
+        </div>
+      </div>
+    )
+  }
+
+  // ============================================================
+  // STANDALONE ORDER DETAILS VIEW (/order/:orderNo)
+  // ============================================================
+  if (routeOrderNo) {
+    return (
+      <div className="container" style={{ padding: '3.5rem 0 5rem' }}>
+        <div style={{ maxWidth: '820px', margin: '0 auto' }}>
+          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Link to="/shop" className="btn btn-gold-outline btn-sm">
+              ← Return to Catalog
+            </Link>
+            <Link to="/my-account" className="btn btn-gold-outline btn-sm">
+              My Account
+            </Link>
+          </div>
+          {trackLoading ? (
+            <div className="orders-loading" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+              <Sparkles size={32} className="gold-text spinning" />
+              <p style={{ marginTop: '1rem', color: 'var(--color-text-muted)' }}>
+                Retrieving live details for Order {routeOrderNo}...
+              </p>
+            </div>
+          ) : trackedOrder ? (
+            renderOrderDetailsCard(trackedOrder)
+          ) : (
+            <div className="orders-empty-card">
+              <AlertCircle size={44} className="gold-text" />
+              <h3>Order Not Found</h3>
+              <p>We could not find an order matching &ldquo;{routeOrderNo}&rdquo;.</p>
+              <Link to="/shop" className="btn btn-gold btn-sm">
+                Explore Catalog
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     )
