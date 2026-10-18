@@ -340,7 +340,7 @@ export default function Home() {
                 onClick={() => setActiveCategoryTab('fragrance')}
                 className={`tab-btn ${activeCategoryTab === 'fragrance' ? 'active' : ''}`}
               >
-                Haute Fragrances (4)
+                Haute Fragrances ({productsList.filter((p) => p.category === 'fragrance').length || 26})
               </button>
               <button
                 role="tab"
@@ -348,7 +348,7 @@ export default function Home() {
                 onClick={() => setActiveCategoryTab('makeup')}
                 className={`tab-btn ${activeCategoryTab === 'makeup' ? 'active' : ''}`}
               >
-                Cosmetics & Primer (1)
+                Cosmetics & Skincare ({productsList.filter((p) => p.category === 'makeup').length || 24})
               </button>
             </div>
           </div>

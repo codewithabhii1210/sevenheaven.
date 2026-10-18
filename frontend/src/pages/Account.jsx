@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { api } from '../services/api.js'
@@ -16,18 +16,27 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
+  Search,
+  X,
+  MapPin,
+  CreditCard,
+  ChevronRight,
+  Truck,
 } from 'lucide-react'
 
 export default function Account() {
   const [searchParams] = useSearchParams()
+  const { orderNo: routeOrderNo } = useParams()
   const { user, isAuthenticated, isAdmin, login, register, logout, loading } = useAuth()
   const { showToast } = useToast()
 
-  // Tabs for guest: 'login' | 'register'
-  const [authTab, setAuthTab] = useState('login')
+  // Tabs for guest: 'login' | 'register' | 'track'
+  const [authTab, setAuthTab] = useState(routeOrderNo ? 'track' : 'login')
 
-  // Tabs for logged in user: 'orders' | 'profile'
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'orders')
+  // Tabs for logged in user: 'orders' | 'profile' | 'track'
+  const [activeTab, setActiveTab] = useState(
+    routeOrderNo ? 'track' : searchParams.get('tab') || 'orders'
+  )
 
   // Login form
   const [loginEmail, setLoginEmail] = useState('')
@@ -43,6 +52,22 @@ export default function Account() {
   // Orders list
   const [orders, setOrders] = useState([])
   const [ordersLoading, setOrdersLoading] = useState(false)
+
+  // Order Details Modal / View
+  const [selectedOrder, setSelectedOrder] = useState(null)
+
+  // Order Lookup / Tracking
+  const [trackInput, setTrackInput] = useState(routeOrderNo || '')
+  const [trackedOrder, setTrackedOrder] = useState(null)
+  const [trackLoading, setTrackLoading] = useState(false)
+
+  // If route has orderNo, automatically look up that order
+  useEffect(() => {
+    if (routeOrderNo) {
+      setTrackInput(routeOrderNo)
+      handleLookupOrder(routeOrderNo)
+    }
+  }, [routeOrderNo])
 
   // Fetch orders when logged in
   useEffect(() => {
@@ -106,6 +131,172 @@ export default function Account() {
     }
   }
 
+  const handleLookupOrder = async (queryNo) => {
+    const no = (queryNo || trackInput || '').trim()
+    if (!no) {
+      showToast('Please enter an order number (e.g. SH-261017-7484)', 'info')
+      return
+    }
+    setTrackLoading(true)
+    try {
+      const res = await api.getOrder(no)
+      if (res && res.order) {
+        setTrackedOrder(res.order)
+        showToast(`Order ${no} retrieved successfully`, 'gold')
+      } else {
+        setTrackedOrder(null)
+        showToast(`No order found matching "${no}"`, 'info')
+      }
+    } catch (err) {
+      setTrackedOrder(null)
+      showToast(err.message || 'Order lookup failed', 'info')
+    } finally {
+      setTrackLoading(false)
+    }
+  }
+
+  // Render Order Details Box (used in modal or tracking pane)
+  const renderOrderDetailsCard = (ord, onClose = null) => {
+    if (!ord) return null
+    const stages = ['placed', 'packed', 'shipped', 'delivered']
+    const currentStageIndex = Math.max(0, stages.indexOf(ord.status || 'placed'))
+
+    return (
+      <div className="order-details-modal-box">
+        {onClose && (
+          <button onClick={onClose} className="order-modal-close-btn" aria-label="Close details">
+            <X size={20} />
+          </button>
+        )}
+
+        <div className="order-modal-header">
+          <div className="order-modal-tag">SEVEN HEAVEN ATELIER DISPATCH</div>
+          <h2 className="order-modal-title">Order Details: {ord.orderNo}</h2>
+          <span className="order-modal-date">
+            Placed on{' '}
+            {new Date(ord.placedAt || ord.createdAt || Date.now()).toLocaleDateString('en-IN', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+        </div>
+
+        {/* Visual 4-Step Tracker */}
+        <div className="order-progress-stepper">
+          {stages.map((stage, idx) => {
+            const isCompleted = idx <= currentStageIndex
+            const isCurrent = idx === currentStageIndex
+            return (
+              <div key={stage} className={`stepper-node ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}>
+                <div className="stepper-dot">
+                  {isCompleted ? <CheckCircle2 size={14} /> : <span>{idx + 1}</span>}
+                </div>
+                <span className="stepper-label">{stage.toUpperCase()}</span>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* 2-Column Summary Grid */}
+        <div className="order-modal-grid">
+          {/* Column 1: Shipping Destination */}
+          <div className="order-modal-card">
+            <h4 className="card-subhead">
+              <MapPin size={16} className="gold-text" />
+              <span>Shipping Destination</span>
+            </h4>
+            <div className="card-info-lines">
+              <p className="recipient-name"><strong>{ord.address?.name || 'Customer'}</strong></p>
+              <p>{ord.address?.line1 || ''}</p>
+              <p>
+                {ord.address?.city || ''}, {ord.address?.state || ''} – {ord.address?.pincode || ''}
+              </p>
+              <p className="phone-line">📞 {ord.address?.phone || 'Not provided'}</p>
+              {ord.address?.email && <p className="email-line">✉️ {ord.address?.email}</p>}
+            </div>
+          </div>
+
+          {/* Column 2: Payment & Financials */}
+          <div className="order-modal-card">
+            <h4 className="card-subhead">
+              <CreditCard size={16} className="gold-text" />
+              <span>Payment & Financials</span>
+            </h4>
+            <div className="card-info-lines">
+              <p>
+                <strong>Method:</strong>{' '}
+                {ord.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'Razorpay Online'}
+              </p>
+              <p>
+                <strong>Payment Status:</strong>{' '}
+                <span className={`status-pill payment-${ord.paymentStatus}`}>
+                  {(ord.paymentStatus || 'pending').toUpperCase()}
+                </span>
+              </p>
+              <p>
+                <strong>Order Status:</strong>{' '}
+                <span className={`status-pill status-${ord.status}`}>
+                  {(ord.status || 'placed').toUpperCase()}
+                </span>
+              </p>
+              <div className="order-price-breakdown">
+                <div className="breakdown-row">
+                  <span>Subtotal:</span>
+                  <span>₹{ord.subtotal || ord.total}</span>
+                </div>
+                {ord.discount > 0 && (
+                  <div className="breakdown-row gold-text">
+                    <span>Discount:</span>
+                    <span>- ₹{ord.discount}</span>
+                  </div>
+                )}
+                {ord.codFee > 0 && (
+                  <div className="breakdown-row">
+                    <span>COD Fee:</span>
+                    <span>₹{ord.codFee}</span>
+                  </div>
+                )}
+                <div className="breakdown-row total-row">
+                  <span>Grand Total:</span>
+                  <strong>₹{ord.total}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Packaged Creations */}
+        <div className="order-modal-items">
+          <h4 className="items-title">Packaged Creations ({ord.items?.length || 0})</h4>
+          <div className="items-table-list">
+            {(ord.items || []).map((item, idx) => (
+              <div key={idx} className="item-detail-row">
+                <img src={item.image || '/images/hero-banner.jpg'} alt={item.name} className="item-thumb" />
+                <div className="item-names">
+                  <strong>{item.name}</strong>
+                  <span>{item.size ? `Volume: ${item.size}` : 'Luxury Formulation'}</span>
+                </div>
+                <div className="item-pricing">
+                  <span>Qty: {item.qty}</span>
+                  <strong>₹{(Number(item.price) || 0) * (Number(item.qty) || 1)}</strong>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Support Note */}
+        <div className="order-modal-support">
+          <Truck size={16} className="gold-text" />
+          <span>Bhopal Concierge Helpline: +91 92019 91418 • sevenheavencosmetics@gmail.com</span>
+        </div>
+      </div>
+    )
+  }
+
   // ============================================================
   // LOGGED IN PATRON VIEW
   // ============================================================
@@ -146,7 +337,10 @@ export default function Account() {
             <button
               role="tab"
               aria-selected={activeTab === 'orders'}
-              onClick={() => setActiveTab('orders')}
+              onClick={() => {
+                setActiveTab('orders')
+                setSelectedOrder(null)
+              }}
               className={`account-tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
             >
               <Package size={16} />
@@ -155,18 +349,35 @@ export default function Account() {
             <button
               role="tab"
               aria-selected={activeTab === 'profile'}
-              onClick={() => setActiveTab('profile')}
+              onClick={() => {
+                setActiveTab('profile')
+                setSelectedOrder(null)
+              }}
               className={`account-tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
             >
               <User size={16} />
               <span>Patron Profile</span>
+            </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'track'}
+              onClick={() => {
+                setActiveTab('track')
+                setSelectedOrder(null)
+              }}
+              className={`account-tab-btn ${activeTab === 'track' ? 'active' : ''}`}
+            >
+              <Search size={16} />
+              <span>Track Order / Look Up</span>
             </button>
           </div>
 
           {/* Tab 1: Orders History */}
           {activeTab === 'orders' && (
             <div className="account-content-pane">
-              {ordersLoading ? (
+              {selectedOrder ? (
+                renderOrderDetailsCard(selectedOrder, () => setSelectedOrder(null))
+              ) : ordersLoading ? (
                 <div className="orders-loading">
                   <Sparkles size={28} className="gold-text spinning" />
                   <p>Retrieving your order archive...</p>
@@ -190,7 +401,7 @@ export default function Account() {
                           <span className="order-no-title">{ord.orderNo}</span>
                           <span className="order-date-text">
                             Placed on{' '}
-                            {new Date(ord.placedAt || ord.createdAt).toLocaleDateString('en-IN', {
+                            {new Date(ord.placedAt || ord.createdAt || Date.now()).toLocaleDateString('en-IN', {
                               month: 'short',
                               day: 'numeric',
                               year: 'numeric',
@@ -199,10 +410,10 @@ export default function Account() {
                         </div>
                         <div className="order-badges-group">
                           <span className={`status-pill status-${ord.status}`}>
-                            {ord.status?.toUpperCase()}
+                            {(ord.status || 'placed').toUpperCase()}
                           </span>
                           <span className={`status-pill payment-${ord.paymentStatus}`}>
-                            {ord.paymentStatus?.toUpperCase()}
+                            {(ord.paymentStatus || 'pending').toUpperCase()}
                           </span>
                         </div>
                       </div>
@@ -210,11 +421,11 @@ export default function Account() {
                       <div className="order-items-preview-row">
                         {(ord.items || []).map((item, idx) => (
                           <div key={idx} className="order-item-thumb-box">
-                            <img src={item.image} alt={item.name} />
+                            <img src={item.image || '/images/hero-banner.jpg'} alt={item.name} />
                             <div className="order-item-thumb-info">
                               <span className="thumb-name">{item.name}</span>
                               <span className="thumb-qty">
-                                Qty: {item.qty} • ₹{item.price * item.qty}
+                                Qty: {item.qty} • ₹{(Number(item.price) || 0) * (Number(item.qty) || 1)}
                               </span>
                             </div>
                           </div>
@@ -228,12 +439,22 @@ export default function Account() {
                           </span>
                           <span>•</span>
                           <span>
-                            <strong>Delivery to:</strong> {ord.address?.city}, {ord.address?.pincode}
+                            <strong>Delivery to:</strong> {ord.address?.city || ''}, {ord.address?.pincode || ''}
                           </span>
                         </div>
-                        <div className="order-total-price">
-                          <span>Total Paid:</span>
-                          <strong>₹{ord.total}</strong>
+                        <div className="order-footer-actions">
+                          <div className="order-total-price">
+                            <span>Total:</span>
+                            <strong>₹{ord.total}</strong>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOrder(ord)}
+                            className="btn btn-gold-outline btn-xs view-order-btn"
+                          >
+                            <span>View Full Details</span>
+                            <ChevronRight size={13} />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -279,13 +500,49 @@ export default function Account() {
               </div>
             </div>
           )}
+
+          {/* Tab 3: Order Tracking / Look Up */}
+          {activeTab === 'track' && (
+            <div className="account-content-pane">
+              <div className="order-track-box">
+                <h3 className="track-title">Live Dispatch Tracking</h3>
+                <p className="track-desc">Enter any Seven Heaven Order # to inspect delivery timeline & address.</p>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    handleLookupOrder()
+                  }}
+                  className="track-input-form"
+                >
+                  <input
+                    type="text"
+                    value={trackInput}
+                    onChange={(e) => setTrackInput(e.target.value)}
+                    placeholder="e.g. SH-261017-7484"
+                    className="text-input track-text-field"
+                    required
+                  />
+                  <button type="submit" disabled={trackLoading} className="btn btn-gold btn-sm">
+                    {trackLoading ? 'Searching...' : 'Track Order'}
+                  </button>
+                </form>
+
+                {trackedOrder && (
+                  <div style={{ marginTop: '1.5rem' }}>
+                    {renderOrderDetailsCard(trackedOrder)}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     )
   }
 
   // ============================================================
-  // GUEST LOGIN / REGISTER VIEW
+  // GUEST LOGIN / REGISTER / ORDER TRACKING VIEW
   // ============================================================
   return (
     <div className="auth-page">
@@ -294,12 +551,18 @@ export default function Account() {
           <div className="auth-header">
             <span className="auth-eyebrow">SEVEN HEAVEN CONCIERGE</span>
             <h1 className="auth-title">
-              {authTab === 'login' ? 'Patron Sign In' : 'Join The VIP Circle'}
+              {authTab === 'login'
+                ? 'Patron Sign In'
+                : authTab === 'register'
+                ? 'Join The VIP Circle'
+                : 'Track Order Details'}
             </h1>
             <p className="auth-subtitle">
               {authTab === 'login'
                 ? 'Access your private order history, tracking details, and saved wishlist.'
-                : 'Register for private reserve access, 10% inaugural discount, and VIP concierge.'}
+                : authTab === 'register'
+                ? 'Register for private reserve access, 10% inaugural discount, and VIP concierge.'
+                : 'Inspect complete order details and live dispatch progress with your Order Number.'}
             </p>
 
             {/* Auth Tab Switcher */}
@@ -316,7 +579,14 @@ export default function Account() {
                 onClick={() => setAuthTab('register')}
                 className={`tab-btn ${authTab === 'register' ? 'active' : ''}`}
               >
-                New Patron (Register)
+                New Patron
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthTab('track')}
+                className={`tab-btn ${authTab === 'track' ? 'active' : ''}`}
+              >
+                Track Order
               </button>
             </div>
           </div>
@@ -458,6 +728,48 @@ export default function Account() {
                 <ArrowRight size={16} />
               </button>
             </form>
+          )}
+
+          {/* GUEST ORDER TRACKING / LOOKUP */}
+          {authTab === 'track' && (
+            <div className="auth-form guest-track-form">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  handleLookupOrder()
+                }}
+              >
+                <div className="field-group">
+                  <label className="field-label">Enter Seven Heaven Order Number</label>
+                  <div className="input-with-icon">
+                    <Search size={16} className="input-icon" />
+                    <input
+                      type="text"
+                      value={trackInput}
+                      onChange={(e) => setTrackInput(e.target.value)}
+                      placeholder="e.g. SH-261017-7484"
+                      className="text-input"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={trackLoading}
+                  className="btn btn-gold btn-block btn-lg"
+                >
+                  <span>{trackLoading ? 'Searching Archive...' : 'Look Up Order Details'}</span>
+                  <ArrowRight size={16} />
+                </button>
+              </form>
+
+              {trackedOrder && (
+                <div style={{ marginTop: '1.5rem' }}>
+                  {renderOrderDetailsCard(trackedOrder)}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

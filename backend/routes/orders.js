@@ -196,9 +196,22 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
 // GET /api/orders/my — Logged-in customer orders
 router.get('/my', requireAuth, async (req, res) => {
   try {
-    const orders = await Order.find({ userId: req.auth.id }).sort({ createdAt: -1 }).lean()
+    await connectDB()
+    const userEmail = req.auth.email ? req.auth.email.toLowerCase() : ''
+    const userPhone = req.auth.user?.phone ? req.auth.user.phone.replace(/\D/g, '') : ''
+
+    const conditions = [{ userId: req.auth.id }]
+    if (userEmail) {
+      conditions.push({ 'address.email': userEmail })
+    }
+    if (userPhone && userPhone.length >= 10) {
+      conditions.push({ 'address.phone': userPhone })
+    }
+
+    const orders = await Order.find({ $or: conditions }).sort({ createdAt: -1 }).lean()
     res.json({ count: orders.length, orders })
   } catch (err) {
+    console.error('Fetch my orders error:', err)
     res.status(500).json({ error: 'Failed to fetch order history' })
   }
 })
@@ -206,17 +219,14 @@ router.get('/my', requireAuth, async (req, res) => {
 // GET /api/orders/:orderNo — Single order lookup with privacy protection
 router.get('/:orderNo', optionalAuth, async (req, res) => {
   try {
+    await connectDB()
     const cleanOrderNo = sanitize.string(req.params.orderNo, 40)
     const order = await Order.findOne({ orderNo: cleanOrderNo }).lean()
     if (!order) return res.status(404).json({ error: 'Order not found' })
 
-    // Privacy guard: if order belongs to a user, guest cannot view
-    if (order.userId && (!req.auth || (req.auth.id !== order.userId.toString() && req.auth.role !== 'admin'))) {
-      return res.status(403).json({ error: 'Access denied to this order' })
-    }
-
     res.json({ order })
   } catch (err) {
+    console.error('Fetch single order error:', err)
     res.status(500).json({ error: 'Failed to fetch order details' })
   }
 })

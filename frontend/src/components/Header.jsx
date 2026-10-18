@@ -176,16 +176,22 @@ export default function Header() {
               {itemsCount > 0 && <span className="action-badge">{itemsCount}</span>}
             </button>
 
-            {/* Account Dropdown */}
+            {/* Account Profile / Dropdown */}
             <div className="account-dropdown-wrap" ref={accountDropdownRef}>
-              <button
-                onClick={() => setIsAccountDropdownOpen((prev) => !prev)}
-                className={`action-icon-btn ${isAuthenticated ? 'user-logged-in' : ''}`}
-                title="Account Menu"
+              <Link
+                to="/my-account"
+                className={`action-icon-btn profile-nav-btn ${isAuthenticated ? 'user-logged-in' : ''}`}
+                title={isAuthenticated ? `Account (${user?.name || 'Patron'})` : 'Sign In / Account'}
                 aria-label="Account Menu"
+                onClick={(e) => {
+                  if (isAuthenticated) {
+                    e.preventDefault()
+                    setIsAccountDropdownOpen((prev) => !prev)
+                  }
+                }}
               >
                 <User size={20} />
-              </button>
+              </Link>
 
               {isAccountDropdownOpen && (
                 <div className="account-dropdown-menu">
@@ -197,19 +203,37 @@ export default function Header() {
                         {isAdmin && <span className="admin-status-pill">Administrator</span>}
                       </div>
                       <div className="dropdown-divider" />
-                      <Link to="/my-account" className="dropdown-link">
+                      <Link
+                        to="/my-account"
+                        onClick={() => setIsAccountDropdownOpen(false)}
+                        className="dropdown-link"
+                      >
                         <User size={15} /> My Profile & Details
                       </Link>
-                      <Link to="/my-account?tab=orders" className="dropdown-link">
+                      <Link
+                        to="/my-account?tab=orders"
+                        onClick={() => setIsAccountDropdownOpen(false)}
+                        className="dropdown-link"
+                      >
                         <Package size={15} /> My Orders
                       </Link>
                       {isAdmin && (
-                        <Link to="/admin" className="dropdown-link admin-highlight">
+                        <Link
+                          to="/admin"
+                          onClick={() => setIsAccountDropdownOpen(false)}
+                          className="dropdown-link admin-highlight"
+                        >
                           <ShieldAlert size={15} className="gold-text" /> Admin Control Panel
                         </Link>
                       )}
                       <div className="dropdown-divider" />
-                      <button onClick={logout} className="dropdown-link logout-btn">
+                      <button
+                        onClick={() => {
+                          setIsAccountDropdownOpen(false)
+                          logout()
+                        }}
+                        className="dropdown-link logout-btn"
+                      >
                         <LogOut size={15} /> Sign Out
                       </button>
                     </>
@@ -219,7 +243,11 @@ export default function Header() {
                         <p className="auth-prompt-title">Seven Heaven VIP</p>
                         <p className="auth-prompt-desc">Access private orders, tracking & exclusive offers.</p>
                       </div>
-                      <Link to="/my-account" className="btn btn-gold btn-sm btn-block">
+                      <Link
+                        to="/my-account"
+                        onClick={() => setIsAccountDropdownOpen(false)}
+                        className="btn btn-gold btn-sm btn-block"
+                      >
                         Login / Sign Up
                       </Link>
                     </>
