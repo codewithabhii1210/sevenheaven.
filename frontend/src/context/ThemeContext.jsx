@@ -14,7 +14,7 @@ export function ThemeProvider({ children }) {
     } catch {
       // ignore
     }
-    return 'dark' // Default is the authentic luxury black and gold
+    return 'dark' // Default luxury noir aesthetic
   })
 
   useEffect(() => {

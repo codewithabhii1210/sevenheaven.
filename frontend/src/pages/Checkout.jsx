@@ -321,7 +321,7 @@ export default function Checkout() {
 
     // 1. Gather delivery address
     let orderAddress = null
-    if (isAuthenticated && savedAddresses.length > 0) {
+    if (isAuthenticated && savedAddresses.length > 0 && !isAddingNewAddress && !editingAddressId) {
       if (!activeSelectedAddress) {
         showToast('Please select a delivery address', 'info')
         return
@@ -334,6 +334,31 @@ export default function Checkout() {
         city: activeSelectedAddress.city.trim(),
         state: activeSelectedAddress.state.trim(),
         pincode: activeSelectedAddress.pincode.trim(),
+      }
+    } else if (isAuthenticated && (savedAddresses.length === 0 || isAddingNewAddress || editingAddressId)) {
+      // Validate addressForm directly
+      if (!validateAddressData(addressForm)) {
+        showToast('Please complete all required shipping address fields', 'info')
+        return
+      }
+      orderAddress = {
+        name: addressForm.name.trim(),
+        phone: addressForm.phone.replace(/\D/g, ''),
+        email: user?.email || '',
+        line1: addressForm.line1.trim(),
+        city: addressForm.city.trim(),
+        state: addressForm.state.trim(),
+        pincode: addressForm.pincode.trim(),
+      }
+      // Silently save to user's saved addresses in backend
+      try {
+        if (!editingAddressId) {
+          api.addAddress(addressForm).then((res) => {
+            if (res && res.addresses) setSavedAddresses(res.addresses)
+          }).catch(() => {})
+        }
+      } catch {
+        // non-blocking
       }
     } else {
       // Validate guest address
@@ -736,10 +761,11 @@ export default function Checkout() {
                   <div className="form-fields-grid">
                     {/* Full Name */}
                     <div className="field-group full-width">
-                      <label className="field-label">
+                      <label htmlFor="addr-name" className="field-label">
                         Full Name <span className="req">*</span>
                       </label>
                       <input
+                        id="addr-name"
                         name="name"
                         type="text"
                         value={addressForm.name}
@@ -753,10 +779,11 @@ export default function Checkout() {
 
                     {/* Mobile Phone */}
                     <div className="field-group">
-                      <label className="field-label">
+                      <label htmlFor="addr-phone" className="field-label">
                         Mobile Phone (+91) <span className="req">*</span>
                       </label>
                       <input
+                        id="addr-phone"
                         name="phone"
                         type="tel"
                         value={addressForm.phone}
@@ -804,10 +831,11 @@ export default function Checkout() {
 
                     {/* Street Address */}
                     <div className="field-group full-width">
-                      <label className="field-label">
+                      <label htmlFor="addr-line1" className="field-label">
                         Street Address & House/Flat No. <span className="req">*</span>
                       </label>
                       <input
+                        id="addr-line1"
                         name="line1"
                         type="text"
                         value={addressForm.line1}
@@ -821,10 +849,11 @@ export default function Checkout() {
 
                     {/* City */}
                     <div className="field-group">
-                      <label className="field-label">
+                      <label htmlFor="addr-city" className="field-label">
                         City <span className="req">*</span>
                       </label>
                       <input
+                        id="addr-city"
                         name="city"
                         type="text"
                         value={addressForm.city}
@@ -838,10 +867,11 @@ export default function Checkout() {
 
                     {/* State */}
                     <div className="field-group">
-                      <label className="field-label">
+                      <label htmlFor="addr-state" className="field-label">
                         State <span className="req">*</span>
                       </label>
                       <input
+                        id="addr-state"
                         name="state"
                         type="text"
                         value={addressForm.state}
@@ -853,10 +883,11 @@ export default function Checkout() {
 
                     {/* Pincode */}
                     <div className="field-group full-width">
-                      <label className="field-label">
+                      <label htmlFor="addr-pincode" className="field-label">
                         Postal Pincode <span className="req">*</span>
                       </label>
                       <input
+                        id="addr-pincode"
                         name="pincode"
                         type="text"
                         value={addressForm.pincode}

@@ -318,7 +318,9 @@ export default function Account() {
 
         <div className="order-modal-header">
           <div className="order-modal-tag">SEVEN HEAVEN ATELIER DISPATCH</div>
-          <h2 className="order-modal-title">Order Details: {ord.orderNo}</h2>
+          <h2 className="order-modal-title">
+            Order Details: <span className="nowrap-order-no">{ord.orderNo}</span>
+          </h2>
           <span className="order-modal-date">
             Placed on{' '}
             {new Date(ord.placedAt || ord.createdAt || Date.now()).toLocaleDateString('en-IN', {
@@ -449,9 +451,9 @@ export default function Account() {
   // ============================================================
   if (routeOrderNo) {
     return (
-      <div className="container standalone-order-page">
-        <div className="standalone-order-inner">
-          <div className="standalone-order-top-nav">
+      <div className="container" style={{ padding: '3.5rem 0 5rem' }}>
+        <div style={{ maxWidth: '820px', margin: '0 auto' }}>
+          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Link to="/shop" className="btn btn-gold-outline btn-sm">
               ← Return to Catalog
             </Link>

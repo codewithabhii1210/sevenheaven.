@@ -169,13 +169,13 @@ export default function Header() {
               {wishlistCount > 0 && <span className="action-badge">{wishlistCount}</span>}
             </Link>
 
-            {/* Theme Toggle Button */}
+            {/* Dark / Light Theme Toggle */}
             <button
               type="button"
               onClick={toggleTheme}
               className="action-icon-btn theme-toggle-btn"
-              title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
-              aria-label="Toggle theme appearance"
+              title={theme === 'dark' ? 'Switch to Light Luxury Theme' : 'Switch to Dark Noir Theme'}
+              aria-label="Toggle dark and light theme"
             >
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
@@ -421,34 +421,28 @@ export default function Header() {
             </nav>
 
             <div className="mobile-drawer-bottom">
-              <div className="mobile-drawer-theme-bar">
-                <span>Theme:</span>
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="drawer-theme-toggle-btn"
-                  aria-label="Toggle theme appearance"
-                >
-                  {theme === 'dark' ? (
-                    <>
-                      <Sun size={15} className="gold-text" />
-                      <span>Light Theme</span>
-                    </>
-                  ) : (
-                    <>
-                      <Moon size={15} className="gold-text" />
-                      <span>Dark Theme</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <div className="mobile-lang-row">
-                <span>Language:</span>
-                <button onClick={toggleLanguage} className="lang-switcher-btn">
-                  <span className={lang === 'en' ? 'active-lang' : ''}>EN</span> /{' '}
-                  <span className={lang === 'hi' ? 'active-lang' : ''}>हिन्दी</span>
-                </button>
+              <div className="mobile-theme-lang-row">
+                <div className="mobile-theme-wrap">
+                  <span>Theme:</span>
+                  <button onClick={toggleTheme} className="theme-switcher-btn" aria-label="Toggle Theme">
+                    {theme === 'dark' ? (
+                      <>
+                        <Sun size={14} className="gold-text" /> <span>Light</span>
+                      </>
+                    ) : (
+                      <>
+                        <Moon size={14} className="gold-text" /> <span>Dark</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className="mobile-lang-wrap">
+                  <span>Language:</span>
+                  <button onClick={toggleLanguage} className="lang-switcher-btn" aria-label="Toggle Language">
+                    <span className={lang === 'en' ? 'active-lang' : ''}>EN</span> /{' '}
+                    <span className={lang === 'hi' ? 'active-lang' : ''}>हिन्दी</span>
+                  </button>
+                </div>
               </div>
               <div className="mobile-contact-row">
                 <a href="tel:+919201991418" className="mobile-phone-link">
