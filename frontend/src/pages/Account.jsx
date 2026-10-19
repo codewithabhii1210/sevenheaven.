@@ -449,9 +449,9 @@ export default function Account() {
   // ============================================================
   if (routeOrderNo) {
     return (
-      <div className="container" style={{ padding: '3.5rem 0 5rem' }}>
-        <div style={{ maxWidth: '820px', margin: '0 auto' }}>
-          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="container standalone-order-page">
+        <div className="standalone-order-inner">
+          <div className="standalone-order-top-nav">
             <Link to="/shop" className="btn btn-gold-outline btn-sm">
               ← Return to Catalog
             </Link>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import Logo7H from './Logo7H.jsx'
 import { api } from '../services/api.js'
 import { useToast } from '../context/ToastContext.jsx'
+import { useTheme } from '../context/ThemeContext.jsx'
 import { site } from '../data/site.js'
 import {
   Phone,
@@ -15,6 +16,8 @@ import {
   ArrowRight,
   CheckCircle2,
   MessageCircle,
+  Sun,
+  Moon,
 } from 'lucide-react'
 
 // Clean Social Icons (SVG)
@@ -50,6 +53,7 @@ export default function Footer() {
   const [subscribing, setSubscribing] = useState(false)
   const [subscribed, setSubscribed] = useState(false)
   const { showToast } = useToast()
+  const { theme, toggleTheme } = useTheme()
 
   const handleNewsletterSubmit = async (e) => {
     e.preventDefault()
@@ -266,11 +270,29 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar: Copyright & Payment icons */}
+        {/* Bottom Bar: Copyright, Theme Toggle & Payment icons */}
         <div className="footer-bottom-bar">
           <p className="copyright-text">
             © {new Date().getFullYear()} Seven Heaven Cosmetics. All Rights Reserved. &ldquo;Beauty Beyond Imagination&rdquo;
           </p>
+          <div className="footer-theme-toggle-wrap">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="footer-theme-toggle-btn"
+              aria-label="Toggle theme appearance"
+            >
+              {theme === 'dark' ? (
+                <>
+                  <Sun size={13} className="gold-text" /> <span>Switch to Light Mode</span>
+                </>
+              ) : (
+                <>
+                  <Moon size={13} className="gold-text" /> <span>Switch to Dark Mode</span>
+                </>
+              )}
+            </button>
+          </div>
           <div className="payment-badges-row">
             <span className="payment-badge-text">100% SECURE PAYMENTS:</span>
             <span className="payment-pill">UPI</span>

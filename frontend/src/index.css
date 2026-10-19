@@ -56,6 +56,186 @@
   --sar: env(safe-area-inset-right, 0px);
 }
 
+/* ============================================================
+   LIGHT THEME PALETTE (Alabaster Ivory & Regal Burnished Gold)
+   ============================================================ */
+[data-theme='light'] {
+  --color-bg: #fbfaf7;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f4f1e9;
+  --color-surface-alt: #eeeae0;
+  --color-surface-card: rgba(255, 255, 255, 0.96);
+
+  --color-gold: #b38e22;
+  --color-gold-light: #947417;
+  --color-gold-dark: #6e550e;
+  --color-gold-gradient: linear-gradient(135deg, #d4af37 0%, #b38e22 50%, #8c6e15 100%);
+  --color-gold-glow: 0 4px 20px rgba(179, 142, 34, 0.14);
+
+  --color-border: rgba(179, 142, 34, 0.28);
+  --color-border-gold: rgba(179, 142, 34, 0.5);
+  --color-border-subtle: rgba(0, 0, 0, 0.08);
+
+  --color-text: #171614;
+  --color-text-muted: #57544d;
+  --color-text-dim: #7d7970;
+}
+
+[data-theme='light'] .site-header {
+  background: rgba(251, 250, 247, 0.95);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+[data-theme='light'] .hero-card,
+[data-theme='light'] .trending-card,
+[data-theme='light'] .card,
+[data-theme='light'] .product-card,
+[data-theme='light'] .checkout-card,
+[data-theme='light'] .checkout-summary-card,
+[data-theme='light'] .confirmation-card,
+[data-theme='light'] .account-address-card,
+[data-theme='light'] .address-radio-card,
+[data-theme='light'] .order-history-card,
+[data-theme='light'] .order-details-modal-box,
+[data-theme='light'] .order-modal-card,
+[data-theme='light'] .item-detail-row,
+[data-theme='light'] .profile-details-card,
+[data-theme='light'] .auth-card,
+[data-theme='light'] .mobile-drawer,
+[data-theme='light'] .cart-drawer,
+[data-theme='light'] .account-dropdown-menu,
+[data-theme='light'] .search-modal-content {
+  background: #ffffff;
+  color: var(--color-text);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='light'] .text-input,
+[data-theme='light'] .search-input-field,
+[data-theme='light'] .track-text-field {
+  background: #f7f5ef;
+  color: #171614;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='light'] .payment-choice-card {
+  background: #faf8f2;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .payment-choice-card.is-selected {
+  background: rgba(179, 142, 34, 0.08);
+  border-color: var(--color-gold);
+}
+
+[data-theme='light'] .address-radio-card.selected {
+  background: rgba(179, 142, 34, 0.06);
+  border-color: var(--color-gold);
+}
+
+[data-theme='light'] .address-recipient-name {
+  color: #171614;
+}
+
+[data-theme='light'] .address-text-line {
+  color: #383632;
+}
+
+[data-theme='light'] .checkout-delivery-target-preview {
+  background: #f7f5ef;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .checkout-delivery-target-preview .target-text strong {
+  color: #171614;
+}
+
+[data-theme='light'] .site-footer {
+  background: #f3f0e8;
+  border-top: 1px solid var(--color-border);
+}
+
+[data-theme='light'] .footer-bottom-bar {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .nav-link-primer {
+  background: rgba(179, 142, 34, 0.1);
+}
+
+/* ============================================================
+   THEME TOGGLE BUTTONS (Header, Mobile Drawer & Footer)
+   ============================================================ */
+.theme-toggle-btn {
+  color: var(--color-gold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+.theme-toggle-btn:hover {
+  transform: rotate(20deg);
+  color: var(--color-gold-light);
+}
+
+/* Mobile Drawer Theme Bar */
+.mobile-drawer-theme-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  margin-bottom: 0.5rem;
+  font-size: 0.88rem;
+}
+
+.drawer-theme-toggle-btn {
+  background: var(--color-surface);
+  border: 1px solid var(--color-gold);
+  color: var(--color-text);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.drawer-theme-toggle-btn:hover {
+  background: rgba(212, 175, 55, 0.12);
+}
+
+/* Footer Theme Toggle */
+.footer-theme-toggle-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.5rem 0;
+}
+
+.footer-theme-toggle-btn {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.footer-theme-toggle-btn:hover {
+  border-color: var(--color-gold);
+  color: var(--color-text);
+}
+
 html {
   scroll-behavior: smooth;
   font-size: 16px;
@@ -5121,9 +5301,11 @@ button {
 
 .order-no-val {
   font-family: monospace;
-  font-size: 1.75rem;
+  font-size: clamp(1.15rem, 5vw, 1.75rem);
   color: var(--color-gold-light);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .order-date {
@@ -5441,22 +5623,31 @@ button {
 
 .account-tabs-row {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   border-bottom: 1px solid var(--color-border-subtle);
   padding-bottom: 0.85rem;
   margin-bottom: 2rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.account-tabs-row::-webkit-scrollbar {
+  display: none;
 }
 
 .account-tab-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
   background: transparent;
   border: none;
   color: var(--color-text-muted);
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  gap: 0.45rem;
+  padding: 0.5rem 0.85rem;
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
 }
@@ -5736,7 +5927,7 @@ button {
   letter-spacing: 0.08em;
 }
 
-/* 2-Column Summary Grid */
+/* 2-Column Summary Grid (Responsive: 1-column on mobile) */
 .order-modal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -5744,11 +5935,48 @@ button {
   margin-bottom: 2rem;
 }
 
+@media (max-width: 768px) {
+  .order-modal-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .order-details-modal-box {
+    padding: 1.25rem 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .order-progress-stepper {
+    padding: 0.75rem 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stepper-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.04em;
+  }
+
+  .stepper-dot {
+    width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+  }
+
+  .order-modal-title {
+    font-size: clamp(1.15rem, 5vw, 1.5rem);
+    line-height: 1.3;
+    word-break: break-word;
+  }
+}
+
 .order-modal-card {
   background: #0e0e14;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
   padding: 1.25rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .card-subhead {
@@ -5766,6 +5994,8 @@ button {
   color: var(--color-text-muted);
   margin: 0.25rem 0;
   line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .card-info-lines .recipient-name {
@@ -5876,6 +6106,38 @@ button {
   color: var(--color-text-dim);
   padding-top: 1rem;
   border-top: 1px solid var(--color-border-subtle);
+}
+
+/* Standalone Order Page (/order/:orderNo) */
+.standalone-order-page {
+  padding: 3rem 1rem 5rem;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.standalone-order-inner {
+  width: 100%;
+}
+
+.standalone-order-top-nav {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nowrap-order-no {
+  white-space: nowrap;
+  word-break: keep-all;
+  display: inline-block;
+  font-family: monospace;
+  color: var(--color-gold-light);
+}
+
+@media (max-width: 768px) {
+  .standalone-order-page {
+    padding: 1.25rem 0.75rem 4rem;
+  }
 }
 
 /* Order Lookup Card */

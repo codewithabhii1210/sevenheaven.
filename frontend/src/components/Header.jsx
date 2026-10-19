@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext.jsx'
 import { useWishlist } from '../context/WishlistContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useLanguage } from '../context/LanguageContext.jsx'
+import { useTheme } from '../context/ThemeContext.jsx'
 import {
   Search,
   Heart,
@@ -18,6 +19,8 @@ import {
   ShieldAlert,
   ArrowRight,
   Sparkles,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { products } from '../data/products.js'
 
@@ -32,6 +35,7 @@ export default function Header() {
   const { wishlistCount } = useWishlist()
   const { user, isAuthenticated, isAdmin, logout } = useAuth()
   const { t, lang, toggleLanguage } = useLanguage()
+  const { theme, toggleTheme } = useTheme()
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -164,6 +168,17 @@ export default function Header() {
               <Heart size={20} />
               {wishlistCount > 0 && <span className="action-badge">{wishlistCount}</span>}
             </Link>
+
+            {/* Theme Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="action-icon-btn theme-toggle-btn"
+              title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+              aria-label="Toggle theme appearance"
+            >
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
 
             {/* Cart Trigger */}
             <button
@@ -406,6 +421,28 @@ export default function Header() {
             </nav>
 
             <div className="mobile-drawer-bottom">
+              <div className="mobile-drawer-theme-bar">
+                <span>Theme:</span>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="drawer-theme-toggle-btn"
+                  aria-label="Toggle theme appearance"
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun size={15} className="gold-text" />
+                      <span>Light Theme</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon size={15} className="gold-text" />
+                      <span>Dark Theme</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
               <div className="mobile-lang-row">
                 <span>Language:</span>
                 <button onClick={toggleLanguage} className="lang-switcher-btn">
