@@ -318,9 +318,7 @@ export default function Account() {
 
         <div className="order-modal-header">
           <div className="order-modal-tag">SEVEN HEAVEN ATELIER DISPATCH</div>
-          <h2 className="order-modal-title">
-            Order Details: <span className="nowrap-order-no">{ord.orderNo}</span>
-          </h2>
+          <h2 className="order-modal-title">Order Details: {ord.orderNo}</h2>
           <span className="order-modal-date">
             Placed on{' '}
             {new Date(ord.placedAt || ord.createdAt || Date.now()).toLocaleDateString('en-IN', {

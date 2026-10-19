@@ -312,7 +312,7 @@ export default function ProductDetail() {
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="btn btn-gold btn-lg btn-block btn-add-cart"
+                className="btn btn-gold btn-lg btn-block"
               >
                 <ShoppingBag size={18} />
                 <span>Add to Bag • ₹{product.price * qty}</span>
@@ -321,7 +321,7 @@ export default function ProductDetail() {
               <button
                 type="button"
                 onClick={handleBuyNow}
-                className="btn btn-gold-outline btn-lg btn-block buy-now-btn btn-buy-now"
+                className="btn btn-gold-outline btn-lg btn-block buy-now-btn"
               >
                 <Zap size={18} className="gold-text" />
                 <span>Buy Now (Instant Checkout)</span>
@@ -518,7 +518,7 @@ export default function ProductDetail() {
           <button
             type="button"
             onClick={handleAddToCart}
-            className="btn btn-gold-outline btn-sm mobile-sticky-add-btn btn-add-cart"
+            className="btn btn-gold-outline btn-sm mobile-sticky-add-btn"
             aria-label="Add to bag"
           >
             <ShoppingBag size={14} />
@@ -527,7 +527,7 @@ export default function ProductDetail() {
           <button
             type="button"
             onClick={handleBuyNow}
-            className="btn btn-gold btn-sm mobile-sticky-buy-btn btn-buy-now"
+            className="btn btn-gold btn-sm mobile-sticky-buy-btn"
             aria-label="Buy now"
           >
             <Zap size={14} />

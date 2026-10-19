@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { ThemeProvider } from './context/ThemeContext.jsx'
 import { LanguageProvider } from './context/LanguageContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
@@ -45,48 +44,46 @@ function PageFallback() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <ToastProvider>
-          <AuthProvider>
-            <WishlistProvider>
-              <CartProvider>
-                <div className="app-root">
-                  {/* Global Sticky Luxury Header */}
-                  <Header />
+    <LanguageProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <div className="app-root">
+                {/* Global Sticky Luxury Header */}
+                <Header />
 
-                  {/* Global Slide-Over Cart Drawer */}
-                  <CartDrawer />
+                {/* Global Slide-Over Cart Drawer */}
+                <CartDrawer />
 
-                  {/* Main View Router with Suspense Code-Splitting */}
-                  <main id="main-content" className="app-main-content">
-                    <Suspense fallback={<PageFallback />}>
-                      <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/shop" element={<Shop />} />
-                        <Route path="/product/:slug" element={<ProductDetail />} />
-                        <Route path="/cart" element={<Cart />} />
-                        <Route path="/checkout" element={<Checkout />} />
-                        <Route path="/my-account" element={<Account />} />
-                        <Route path="/orders" element={<Account />} />
-                        <Route path="/order/:orderNo" element={<Account />} />
-                        <Route path="/wishlist" element={<Wishlist />} />
-                        <Route path="/about-us" element={<About />} />
-                        <Route path="/contact-us" element={<Contact />} />
-                        <Route path="/admin" element={<AdminDashboard />} />
-                        <Route path="*" element={<Home />} />
-                      </Routes>
-                    </Suspense>
-                  </main>
+                {/* Main View Router with Suspense Code-Splitting */}
+                <main id="main-content" className="app-main-content">
+                  <Suspense fallback={<PageFallback />}>
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/shop" element={<Shop />} />
+                      <Route path="/product/:slug" element={<ProductDetail />} />
+                      <Route path="/cart" element={<Cart />} />
+                      <Route path="/checkout" element={<Checkout />} />
+                      <Route path="/my-account" element={<Account />} />
+                      <Route path="/orders" element={<Account />} />
+                      <Route path="/order/:orderNo" element={<Account />} />
+                      <Route path="/wishlist" element={<Wishlist />} />
+                      <Route path="/about-us" element={<About />} />
+                      <Route path="/contact-us" element={<Contact />} />
+                      <Route path="/admin" element={<AdminDashboard />} />
+                      <Route path="*" element={<Home />} />
+                    </Routes>
+                  </Suspense>
+                </main>
 
-                  {/* Global 4-Column Luxury Footer */}
-                  <Footer />
-                </div>
-              </CartProvider>
-            </WishlistProvider>
-          </AuthProvider>
-        </ToastProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+                {/* Global 4-Column Luxury Footer */}
+                <Footer />
+              </div>
+            </CartProvider>
+          </WishlistProvider>
+        </AuthProvider>
+      </ToastProvider>
+    </LanguageProvider>
   )
 }
