@@ -77,18 +77,18 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     setLoading(true)
+    // Clear local session FIRST and synchronously — logout must never depend
+    // on network. The server call below is best-effort (clears HttpOnly cookie).
+    localStorage.removeItem('sh7_token')
+    localStorage.removeItem('sh7_user')
+    setToken(null)
+    setUser(null)
+    setLoading(false)
+    showToast('Logged out successfully', 'info')
     try {
       await api.logout()
     } catch {
-      // ignore — clear local session regardless
-    } finally {
-      // Hard-clear local session even if the API call failed
-      localStorage.removeItem('sh7_token')
-      localStorage.removeItem('sh7_user')
-      setToken(null)
-      setUser(null)
-      setLoading(false)
-      showToast('Logged out successfully', 'info')
+      // ignore — local session already cleared; stale cookie expires in 7 days
     }
   }
 
