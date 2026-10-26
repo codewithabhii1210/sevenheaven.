@@ -231,6 +231,13 @@ router.post('/products', async (req, res) => {
   }
 })
 
+// Resolve product by Mongo _id (only if valid ObjectId) or custom product id
+function productFilter(paramId) {
+  const clauses = [{ id: paramId }]
+  if (/^[0-9a-fA-F]{24}$/.test(paramId)) clauses.unshift({ _id: paramId })
+  return { $or: clauses }
+}
+
 // PUT /api/admin/products/:id — Edit product (accepts Mongo _id or custom product id)
 router.put('/products/:id', async (req, res) => {
   try {
@@ -240,11 +247,10 @@ router.put('/products/:id', async (req, res) => {
       return res.status(400).json({ error: 'No valid fields to update' })
     }
 
-    const product = await Product.findOneAndUpdate(
-      { $or: [{ _id: req.params.id }, { id: req.params.id }] },
-      { $set: fields },
-      { new: true, runValidators: true }
-    )
+    const product = await Product.findOneAndUpdate(productFilter(req.params.id), { $set: fields }, {
+      new: true,
+      runValidators: true,
+    })
     if (!product) return res.status(404).json({ error: 'Product not found' })
     res.json({ success: true, product })
   } catch (err) {
@@ -255,7 +261,7 @@ router.put('/products/:id', async (req, res) => {
 // DELETE /api/admin/products/:id — Toggle active state of product (accepts _id or custom id)
 router.delete('/products/:id', async (req, res) => {
   try {
-    const product = await Product.findOne({ $or: [{ _id: req.params.id }, { id: req.params.id }] })
+    const product = await Product.findOne(productFilter(req.params.id))
     if (!product) return res.status(404).json({ error: 'Product not found' })
     product.active = !product.active
     await product.save()
