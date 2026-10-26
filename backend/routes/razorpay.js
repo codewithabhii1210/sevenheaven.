@@ -167,6 +167,10 @@ router.post('/payment-failed', orderLimiter, async (req, res) => {
     if (order.paymentStatus === 'paid') {
       return res.json({ success: true, ignored: true })
     }
+    // Only online-payment orders can "fail" — COD orders are untouched here
+    if (order.paymentMethod !== 'razorpay') {
+      return res.json({ success: true, ignored: true })
+    }
 
     order.paymentStatus = 'failed'
     await order.save()
