@@ -16,11 +16,14 @@ export const apiLimiter = rateLimit({
 })
 
 // 2. Strict Auth limiter (Brute-force password guessing protection)
+// skipSuccessfulRequests: only FAILED attempts consume the budget, so a
+// legitimate customer logging in repeatedly is never locked out by mistake.
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Max 10 attempts per IP per 15 mins
+  max: 10, // Max 10 failed attempts per IP per 15 mins
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: true,
   message: rateLimitResponse('Too many login attempts. For security, please wait 15 minutes.'),
 })
 

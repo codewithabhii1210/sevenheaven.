@@ -12,20 +12,47 @@ import {
   Clock,
   Sparkles,
   RefreshCw,
+  Plus,
+  Edit2,
+  Power,
 } from 'lucide-react'
+
+const EMPTY_PRODUCT_FORM = {
+  name: '',
+  category: 'makeup',
+  subcategory: '',
+  size: '',
+  price: '',
+  mrp: '',
+  stock: '',
+  badge: '',
+  featured: false,
+  image: '',
+  shortDesc: '',
+  description: '',
+  howToUse: '',
+  benefits: '',
+}
 
 export default function AdminDashboard() {
   const { user, isAdmin, isAuthenticated, loading: authLoading } = useAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
 
-  const [activeTab, setActiveTab] = useState('orders') // orders | messages | subscribers | stats
+  const [activeTab, setActiveTab] = useState('orders') // orders | products | messages | subscribers
   const [stats, setStats] = useState(null)
   const [orders, setOrders] = useState([])
+  const [products, setProducts] = useState([])
   const [messages, setMessages] = useState([])
   const [subscribers, setSubscribers] = useState([])
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState(null)
+
+  // Product create/edit form state
+  const [showProductForm, setShowProductForm] = useState(false)
+  const [editingProduct, setEditingProduct] = useState(null) // null = creating
+  const [productForm, setProductForm] = useState(EMPTY_PRODUCT_FORM)
+  const [productSaving, setProductSaving] = useState(false)
 
   // Redirect if not admin
   useEffect(() => {
@@ -38,14 +65,16 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [statsRes, ordersRes, messagesRes, subsRes] = await Promise.all([
+      const [statsRes, ordersRes, productsRes, messagesRes, subsRes] = await Promise.all([
         api.getAdminStats().catch(() => ({ stats: {} })),
         api.getAdminOrders({ limit: 50 }).catch(() => ({ orders: [] })),
+        api.getAdminProducts().catch(() => ({ products: [] })),
         api.getAdminMessages().catch(() => ({ messages: [] })),
         api.getAdminNewsletter().catch(() => ({ subscribers: [] })),
       ])
       setStats(statsRes.stats || {})
       setOrders(ordersRes.orders || [])
+      setProducts(productsRes.products || [])
       setMessages(messagesRes.messages || [])
       setSubscribers(subsRes.subscribers || [])
     } catch (err) {
@@ -81,6 +110,130 @@ export default function AdminDashboard() {
       )
     } catch (err) {
       showToast(err.message || 'Failed to update order status', 'info')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  // ---------- PRODUCT MANAGEMENT HANDLERS ----------
+  const openNewProduct = () => {
+    setEditingProduct(null)
+    setProductForm(EMPTY_PRODUCT_FORM)
+    setShowProductForm(true)
+  }
+
+  const openEditProduct = (p) => {
+    setEditingProduct(p)
+    setProductForm({
+      name: p.name || '',
+      category: p.category || 'makeup',
+      subcategory: p.subcategory || '',
+      size: p.size || '',
+      price: p.price ?? '',
+      mrp: p.mrp ?? '',
+      stock: p.stock ?? '',
+      badge: p.badge || '',
+      featured: !!p.featured,
+      image: p.image || '',
+      shortDesc: p.shortDesc || '',
+      description: p.description || '',
+      howToUse: p.howToUse || '',
+      benefits: Array.isArray(p.benefits) ? p.benefits.join(', ') : '',
+    })
+    setShowProductForm(true)
+  }
+
+  const handleProductFormChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setProductForm((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }))
+  }
+
+  const handleProductSubmit = async (e) => {
+    e.preventDefault()
+    if (!productForm.name.trim()) {
+      showToast('Product name is required', 'info')
+      return
+    }
+    if (productForm.price === '' || productForm.mrp === '') {
+      showToast('Price and MRP are required', 'info')
+      return
+    }
+
+    setProductSaving(true)
+    try {
+      const payload = {
+        name: productForm.name.trim(),
+        category: productForm.category,
+        subcategory: productForm.subcategory.trim(),
+        size: productForm.size.trim(),
+        price: Number(productForm.price),
+        mrp: Number(productForm.mrp),
+        stock: Number(productForm.stock) || 0,
+        badge: productForm.badge || undefined,
+        featured: productForm.featured,
+        image: productForm.image.trim(),
+        shortDesc: productForm.shortDesc.trim(),
+        description: productForm.description.trim(),
+        howToUse: productForm.howToUse.trim(),
+        benefits: productForm.benefits
+          .split(',')
+          .map((b) => b.trim())
+          .filter(Boolean),
+      }
+
+      if (editingProduct) {
+        await api.updateAdminProduct(editingProduct._id, payload)
+        showToast(`Product "${payload.name}" updated`, 'gold')
+      } else {
+        await api.createAdminProduct(payload)
+        showToast(`Product "${payload.name}" added to catalog`, 'gold')
+      }
+      setShowProductForm(false)
+      setEditingProduct(null)
+      // Refresh product list
+      const res = await api.getAdminProducts().catch(() => null)
+      if (res?.products) setProducts(res.products)
+    } catch (err) {
+      showToast(err.message || 'Failed to save product', 'info')
+    } finally {
+      setProductSaving(false)
+    }
+  }
+
+  const handleToggleProduct = async (p) => {
+    setUpdatingId(p._id)
+    try {
+      const res = await api.toggleAdminProduct(p._id)
+      setProducts((prev) =>
+        prev.map((prod) => (prod._id === p._id ? { ...prod, active: res.active } : prod))
+      )
+      showToast(
+        res.active ? `"${p.name}" is now LIVE in store` : `"${p.name}" hidden from store`,
+        'gold'
+      )
+    } catch (err) {
+      showToast(err.message || 'Failed to toggle product status', 'info')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  const handleStockChange = async (p, newStock) => {
+    const stock = Number(newStock)
+    if (Number.isNaN(stock) || stock < 0) {
+      showToast('Stock must be a number of 0 or more', 'info')
+      return
+    }
+    setUpdatingId(p._id)
+    try {
+      await api.updateAdminProduct(p._id, { stock })
+      setProducts((prev) => prev.map((prod) => (prod._id === p._id ? { ...prod, stock } : prod)))
+      showToast(`Stock for "${p.name}" set to ${stock}`, 'gold')
+    } catch (err) {
+      showToast(err.message || 'Failed to update stock', 'info')
     } finally {
       setUpdatingId(null)
     }
@@ -170,6 +323,15 @@ export default function AdminDashboard() {
           >
             <Package size={16} />
             <span>Orders Management ({orders.length})</span>
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === 'products'}
+            onClick={() => setActiveTab('products')}
+            className={`admin-tab-btn ${activeTab === 'products' ? 'active' : ''}`}
+          >
+            <Sparkles size={16} />
+            <span>Catalog Products ({products.length})</span>
           </button>
           <button
             role="tab"
@@ -366,7 +528,315 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* TAB 3: VIP SUBSCRIBERS */}
+        {/* TAB 3: CATALOG PRODUCTS MANAGEMENT */}
+        {activeTab === 'products' && (
+          <div className="admin-content-pane">
+            <div className="admin-pane-header">
+              <h3>Product Catalog</h3>
+              <button onClick={openNewProduct} className="btn btn-gold btn-sm">
+                <Plus size={15} />
+                <span>Add New Product</span>
+              </button>
+            </div>
+
+            {/* Inline Product Create / Edit Form */}
+            {showProductForm && (
+              <form onSubmit={handleProductSubmit} className="admin-product-form">
+                <h4 className="product-form-title">
+                  {editingProduct ? `Edit: ${editingProduct.name}` : 'Add New Product'}
+                </h4>
+                <div className="product-form-grid">
+                  <label className="form-field">
+                    <span>Product Name *</span>
+                    <input
+                      type="text"
+                      name="name"
+                      value={productForm.name}
+                      onChange={handleProductFormChange}
+                      className="text-input"
+                      maxLength={120}
+                      required
+                    />
+                  </label>
+                  <label className="form-field">
+                    <span>Category *</span>
+                    <select
+                      name="category"
+                      value={productForm.category}
+                      onChange={handleProductFormChange}
+                      className="text-input"
+                    >
+                      <option value="makeup">Makeup</option>
+                      <option value="skincare">Skincare</option>
+                      <option value="fragrance">Fragrance</option>
+                    </select>
+                  </label>
+                  <label className="form-field">
+                    <span>Subcategory</span>
+                    <input
+                      type="text"
+                      name="subcategory"
+                      value={productForm.subcategory}
+                      onChange={handleProductFormChange}
+                      className="text-input"
+                      maxLength={60}
+                      placeholder="e.g. lipstick, primer, kajal"
+                    />
+                  </label>
+                  <label className="form-field">
+                    <span>Size / Volume</span>
+                    <input
+                      type="text"
+                      name="size"
+                      value={productForm.size}
+                      onChange={handleProductFormChange}
+                      className="text-input"
+                      maxLength={40}
+                      placeholder="e.g. 30 ml"
+                    />
+                  </label>
+                  <label className="form-field">
+                    <span>Sale Price (₹) *</span>
+                    <input
+                      type="number"
+                      name="price"
+                      value={productForm.price}
+                      onChange={handleProductFormChange}
+                      className="text-input"
+                      min="0"
+                      required
+                    />
+                  </label>
+                  <label className="form-field">
+                    <span>MRP (₹) *</span>
+                    <input
+                      type="number"
+                      name="mrp"
+                      value={productForm.mrp}
+                      onChange={handleProductFormChange}
+                      className="text-input"
+                      min="0"
+                      required
+                    />
+                  </label>
+                  <label className="form-field">
+                    <span>Stock Qty</span>
+                    <input
+                      type="number"
+                      name="stock"
+                      value={productForm.stock}
+                      onChange={handleProductFormChange}
+                      className="text-input"
+                      min="0"
+                    />
+                  </label>
+                  <label className="form-field">
+                    <span>Badge</span>
+                    <select
+                      name="badge"
+                      value={productForm.badge}
+                      onChange={handleProductFormChange}
+                      className="text-input"
+                    >
+                      <option value="">None</option>
+                      <option value="bestseller">Bestseller</option>
+                      <option value="new">New</option>
+                      <option value="sale">Sale</option>
+                    </select>
+                  </label>
+                  <label className="form-field form-field-wide">
+                    <span>Image Path or URL</span>
+                    <input
+                      type="text"
+                      name="image"
+                      value={productForm.image}
+                      onChange={handleProductFormChange}
+                      className="text-input"
+                      maxLength={500}
+                      placeholder="/images/products/your-image.jpg"
+                    />
+                  </label>
+                  <label className="form-field form-field-wide">
+                    <span>Short Description</span>
+                    <input
+                      type="text"
+                      name="shortDesc"
+                      value={productForm.shortDesc}
+                      onChange={handleProductFormChange}
+                      className="text-input"
+                      maxLength={200}
+                    />
+                  </label>
+                  <label className="form-field form-field-wide">
+                    <span>Description</span>
+                    <textarea
+                      name="description"
+                      value={productForm.description}
+                      onChange={handleProductFormChange}
+                      className="text-input"
+                      rows={3}
+                      maxLength={2000}
+                    />
+                  </label>
+                  <label className="form-field form-field-wide">
+                    <span>Key Benefits (comma separated)</span>
+                    <input
+                      type="text"
+                      name="benefits"
+                      value={productForm.benefits}
+                      onChange={handleProductFormChange}
+                      className="text-input"
+                      maxLength={300}
+                      placeholder="16HR Wear, Non-Drying, Cruelty-Free"
+                    />
+                  </label>
+                  <label className="form-field form-field-wide">
+                    <span>How to Use</span>
+                    <textarea
+                      name="howToUse"
+                      value={productForm.howToUse}
+                      onChange={handleProductFormChange}
+                      className="text-input"
+                      rows={2}
+                      maxLength={1000}
+                    />
+                  </label>
+                  <label className="form-field checkbox-field">
+                    <input
+                      type="checkbox"
+                      name="featured"
+                      checked={productForm.featured}
+                      onChange={handleProductFormChange}
+                    />
+                    <span>Featured on Homepage</span>
+                  </label>
+                </div>
+                <div className="product-form-actions">
+                  <button type="submit" className="btn btn-gold btn-sm" disabled={productSaving}>
+                    {productSaving ? 'Saving...' : editingProduct ? 'Save Changes' : 'Add Product'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowProductForm(false)
+                      setEditingProduct(null)
+                    }}
+                    className="btn btn-gold-outline btn-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {loading ? (
+              <div className="admin-loading-state">
+                <Sparkles size={24} className="gold-text spinning" />
+                <p>Loading catalog...</p>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="admin-empty-state">
+                <p>No products in the catalog yet. Click "Add New Product" to list one.</p>
+              </div>
+            ) : (
+              <div className="orders-table-wrap">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Product</th>
+                      <th>Category</th>
+                      <th>Price / MRP</th>
+                      <th>Stock</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((p, idx) => (
+                      <tr key={p._id}>
+                        <td>{idx + 1}</td>
+                        <td>
+                          <div className="product-admin-cell">
+                            <img
+                              src={p.image || '/images/hero-banner.jpg'}
+                              alt={p.name}
+                              className="product-admin-thumb"
+                            />
+                            <div>
+                              <strong>{p.name}</strong>
+                              <span className="table-subtext">/{p.slug}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="method-tag">{p.category}</span>
+                        </td>
+                        <td>
+                          <strong className="table-amount">₹{p.price}</strong>
+                          {p.mrp > p.price && (
+                            <span className="table-subtext">MRP ₹{p.mrp}</span>
+                          )}
+                        </td>
+                        <td>
+                          <form
+                            className="stock-update-form"
+                            onSubmit={(e) => {
+                              e.preventDefault()
+                              handleStockChange(p, e.target.elements.stock.value)
+                            }}
+                          >
+                            <input
+                              type="number"
+                              name="stock"
+                              defaultValue={p.stock}
+                              min="0"
+                              className="stock-input"
+                              key={`${p._id}-${p.stock}`}
+                            />
+                            <button
+                              type="submit"
+                              className="btn btn-gold-outline btn-sm"
+                              disabled={updatingId === p._id}
+                            >
+                              Save
+                            </button>
+                          </form>
+                        </td>
+                        <td>
+                          <span className={`status-pill ${p.active ? 'status-placed' : 'status-cancelled'}`}>
+                            {p.active ? 'LIVE' : 'HIDDEN'}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="admin-action-btns">
+                            <button
+                              onClick={() => openEditProduct(p)}
+                              className="btn btn-gold-outline btn-sm"
+                              title="Edit product"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleToggleProduct(p)}
+                              className="btn btn-gold-outline btn-sm"
+                              disabled={updatingId === p._id}
+                              title={p.active ? 'Hide from store' : 'Publish to store'}
+                            >
+                              <Power size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 4: VIP SUBSCRIBERS */}
         {activeTab === 'subscribers' && (
           <div className="admin-content-pane">
             <div className="admin-pane-header">

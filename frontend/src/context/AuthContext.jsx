@@ -19,22 +19,27 @@ export function AuthProvider({ children }) {
 
   // Verify auth on mount if token exists
   useEffect(() => {
-    if (token) {
-      api
-        .getMe()
-        .then((res) => {
-          if (res?.user) {
-            setUser(res.user)
-            localStorage.setItem('sh7_user', JSON.stringify(res.user))
-          }
-        })
-        .catch(() => {
-          // Token invalid or expired
-          setToken(null)
-          setUser(null)
-          localStorage.removeItem('sh7_token')
-          localStorage.removeItem('sh7_user')
-        })
+    if (!token) return undefined
+    let stale = false // guards against resolving after logout
+    api
+      .getMe()
+      .then((res) => {
+        if (stale) return
+        if (res?.user) {
+          setUser(res.user)
+          localStorage.setItem('sh7_user', JSON.stringify(res.user))
+        }
+      })
+      .catch(() => {
+        if (stale) return
+        // Token invalid or expired
+        setToken(null)
+        setUser(null)
+        localStorage.removeItem('sh7_token')
+        localStorage.removeItem('sh7_user')
+      })
+    return () => {
+      stale = true
     }
   }, [token])
 
@@ -75,8 +80,11 @@ export function AuthProvider({ children }) {
     try {
       await api.logout()
     } catch {
-      // ignore
+      // ignore — clear local session regardless
     } finally {
+      // Hard-clear local session even if the API call failed
+      localStorage.removeItem('sh7_token')
+      localStorage.removeItem('sh7_user')
       setToken(null)
       setUser(null)
       setLoading(false)

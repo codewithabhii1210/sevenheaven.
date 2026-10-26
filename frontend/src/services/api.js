@@ -262,4 +262,27 @@ export const api = {
   async getAdminNewsletter() {
     return await request('/api/admin/newsletter')
   },
+
+  // ---------- ADMIN PRODUCTS ----------
+  async getAdminProducts() {
+    return await request('/api/admin/products')
+  },
+
+  async createAdminProduct(productData) {
+    return await request('/api/admin/products', {
+      method: 'POST',
+      body: JSON.stringify(productData),
+    })
+  },
+
+  async updateAdminProduct(id, productData) {
+    return await request(`/api/admin/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(productData),
+    })
+  },
+
+  async toggleAdminProduct(id) {
+    return await request(`/api/admin/products/${id}`, { method: 'DELETE' })
+  },
 }

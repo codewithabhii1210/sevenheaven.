@@ -115,20 +115,136 @@ router.patch('/orders/:id/status', async (req, res) => {
   }
 })
 
-// POST /api/admin/products — Add new product to catalog
+// ---------- PRODUCT MANAGEMENT (whitelisted fields, auto id/slug) ----------
+const PRODUCT_STR_FIELDS = [
+  'name', 'subname', 'brand', 'category', 'subcategory', 'size',
+  'badge', 'image', 'shortDesc', 'description', 'howToUse', 'ingredients', 'couponCode',
+]
+const PRODUCT_NUM_FIELDS = ['price', 'mrp', 'stock']
+const PRODUCT_ARR_FIELDS = ['gallery', 'benefits', 'features']
+const VALID_CATEGORIES = ['makeup', 'skincare', 'fragrance']
+const VALID_BADGES = ['bestseller', 'new', 'sale']
+
+function slugify(text) {
+  return String(text || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80)
+}
+
+// Extract and validate only allowed product fields from a request body
+function pickProductFields(body, { partial = false } = {}) {
+  const out = {}
+  const errors = []
+
+  for (const f of PRODUCT_STR_FIELDS) {
+    if (body[f] !== undefined) {
+      const val = sanitize.string(body[f], f === 'description' ? 5000 : 600)
+      if (partial || val) out[f] = val
+    }
+  }
+  if (body.name !== undefined && !partial && !out.name) errors.push('Product name is required')
+
+  for (const f of PRODUCT_NUM_FIELDS) {
+    if (body[f] !== undefined) {
+      const max = f === 'price' || f === 'mrp' ? 1000000 : 100000
+      const val = sanitize.number(body[f], 0, max)
+      if (val === null) errors.push(`Invalid value for ${f}`)
+      else out[f] = val
+    }
+  }
+  if (!partial) {
+    if (out.price === undefined) errors.push('Price is required')
+    if (out.mrp === undefined) errors.push('MRP is required')
+  }
+  if (out.price !== undefined && out.mrp !== undefined && out.mrp < out.price) {
+    errors.push('MRP cannot be lower than the sale price')
+  }
+
+  for (const f of PRODUCT_ARR_FIELDS) {
+    if (body[f] !== undefined) {
+      if (!Array.isArray(body[f])) {
+        errors.push(`${f} must be a list`)
+      } else {
+        out[f] = body[f]
+          .map((v) => (typeof v === 'string' ? sanitize.string(v, 300) : ''))
+          .filter(Boolean)
+          .slice(0, 20)
+      }
+    }
+  }
+
+  if (body.category !== undefined && !VALID_CATEGORIES.includes(out.category)) {
+    errors.push(`Category must be one of: ${VALID_CATEGORIES.join(', ')}`)
+  }
+  if (body.badge !== undefined && out.badge && !VALID_BADGES.includes(out.badge)) {
+    errors.push(`Badge must be one of: ${VALID_BADGES.join(', ')}`)
+  }
+  if (body.featured !== undefined) out.featured = body.featured === true || body.featured === 'true'
+  if (body.active !== undefined) out.active = body.active === true || body.active === 'true'
+
+  return { fields: out, errors }
+}
+
+// GET /api/admin/products — Full catalog list (includes inactive items)
+router.get('/products', async (req, res) => {
+  try {
+    const products = await Product.find().sort({ createdAt: -1 }).lean()
+    res.json({ count: products.length, products })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve product list' })
+  }
+})
+
+// POST /api/admin/products — Add new product (auto-generates unique id + slug)
 router.post('/products', async (req, res) => {
   try {
-    const product = await Product.create(req.body)
+    const { fields, errors } = pickProductFields(req.body || {})
+    if (errors.length) return res.status(400).json({ error: errors.join('. ') })
+
+    // Auto slug from name (or provided slug), guaranteed unique
+    let slug = slugify(sanitize.string(req.body.slug, 80)) || slugify(fields.name)
+    if (!slug) return res.status(400).json({ error: 'Could not generate a slug from the product name' })
+    if (await Product.exists({ slug })) {
+      const suffix = Date.now().toString(36).slice(-4)
+      slug = `${slug}-${suffix}`
+    }
+
+    // Auto unique id (sh7-<slug>)
+    let productId = `sh7-${slug}`
+    if (await Product.exists({ id: productId })) {
+      productId = `${productId}-${Date.now().toString(36).slice(-4)}`
+    }
+
+    const product = await Product.create({
+      ...fields,
+      slug,
+      id: productId,
+      brand: fields.brand || 'Seven Heaven',
+      active: fields.active !== undefined ? fields.active : true,
+    })
     res.status(201).json({ success: true, product })
   } catch (err) {
     res.status(400).json({ error: err.message || 'Product creation failed' })
   }
 })
 
-// PUT /api/admin/products/:id — Edit product in catalog
+// PUT /api/admin/products/:id — Edit product (accepts Mongo _id or custom product id)
 router.put('/products/:id', async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    const { fields, errors } = pickProductFields(req.body || {}, { partial: true })
+    if (errors.length) return res.status(400).json({ error: errors.join('. ') })
+    if (Object.keys(fields).length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' })
+    }
+
+    const product = await Product.findOneAndUpdate(
+      { $or: [{ _id: req.params.id }, { id: req.params.id }] },
+      { $set: fields },
+      { new: true, runValidators: true }
+    )
     if (!product) return res.status(404).json({ error: 'Product not found' })
     res.json({ success: true, product })
   } catch (err) {
@@ -136,10 +252,10 @@ router.put('/products/:id', async (req, res) => {
   }
 })
 
-// DELETE /api/admin/products/:id — Toggle active state of product
+// DELETE /api/admin/products/:id — Toggle active state of product (accepts _id or custom id)
 router.delete('/products/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
+    const product = await Product.findOne({ $or: [{ _id: req.params.id }, { id: req.params.id }] })
     if (!product) return res.status(404).json({ error: 'Product not found' })
     product.active = !product.active
     await product.save()

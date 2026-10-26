@@ -273,7 +273,10 @@ router.get('/my', requireAuth, async (req, res) => {
   }
 })
 
-// GET /api/orders/:orderNo — Single order lookup with privacy protection
+// GET /api/orders/:orderNo — Single order lookup.
+// Order numbers are guessable (SH-YYMMDD-XXXX), so PII is only returned to
+// the order's owner or an admin. Anonymous/guest lookups get a masked copy
+// (status, items, totals + partial address) with no name/phone/email/street.
 router.get('/:orderNo', optionalAuth, async (req, res) => {
   try {
     await connectDB()
@@ -281,7 +284,36 @@ router.get('/:orderNo', optionalAuth, async (req, res) => {
     const order = await Order.findOne({ orderNo: cleanOrderNo }).lean()
     if (!order) return res.status(404).json({ error: 'Order not found' })
 
-    res.json({ order })
+    const requesterEmail = req.auth?.email ? req.auth.email.toLowerCase() : ''
+    const isOwner =
+      req.auth &&
+      (req.auth.role === 'admin' ||
+        (order.userId && order.userId.toString() === req.auth.id) ||
+        (requesterEmail && order.address?.email?.toLowerCase() === requesterEmail))
+
+    if (isOwner) return res.json({ order })
+
+    // Masked guest view: keep tracking useful, hide identity & exact address
+    const maskName = (n) =>
+      n ? n.trim().charAt(0).toUpperCase() + '•'.repeat(Math.max(2, Math.min(8, n.trim().length - 1))) : ''
+    const maskPhone = (p) => (p ? '•••••' + String(p).slice(-4) : '')
+
+    res.json({
+      order: {
+        ...order,
+        userId: undefined,
+        address: {
+          name: maskName(order.address?.name),
+          line1: '',
+          city: order.address?.city || '',
+          state: order.address?.state || '',
+          pincode: order.address?.pincode || '',
+          phone: maskPhone(order.address?.phone),
+          email: '',
+        },
+      },
+      masked: true,
+    })
   } catch (err) {
     console.error('Fetch single order error:', err)
     res.status(500).json({ error: 'Failed to fetch order details' })

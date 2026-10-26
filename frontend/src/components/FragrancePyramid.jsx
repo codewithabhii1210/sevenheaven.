@@ -6,7 +6,7 @@ export default function FragrancePyramid({ notes, benefits, isPerfume = true }) 
       <div className="product-highlights-box">
         <div className="highlights-header">
           <Sparkles size={16} className="gold-text" />
-          <h4 className="highlights-title">Key Primer Benefits</h4>
+          <h4 className="highlights-title">Key Benefits</h4>
         </div>
         <div className="benefits-grid">
           {benefits.map((b, idx) => (

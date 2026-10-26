@@ -8080,3 +8080,90 @@ button {
 .testimonials-disclaimer {
   margin-top: 1.75rem;
 }
+
+/* ============ ADMIN PRODUCT MANAGEMENT ============ */
+.admin-product-form {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border, rgba(212, 175, 55, 0.25));
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.product-form-title {
+  font-family: var(--font-display, serif);
+  color: var(--color-gold, #d4af37);
+  margin-bottom: 1.2rem;
+  font-size: 1.15rem;
+}
+.product-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.form-field > span {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #999);
+}
+.form-field-wide {
+  grid-column: 1 / -1;
+}
+.checkbox-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+.checkbox-field input {
+  accent-color: var(--color-gold, #d4af37);
+  width: 16px;
+  height: 16px;
+}
+.product-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+.product-admin-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+.product-admin-thumb {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  flex-shrink: 0;
+}
+.stock-update-form {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.stock-input {
+  width: 64px;
+  padding: 0.3rem 0.45rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 7px;
+  color: inherit;
+  font-size: 0.85rem;
+}
+.admin-action-btns {
+  display: flex;
+  gap: 0.4rem;
+}
+@media (max-width: 640px) {
+  .product-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

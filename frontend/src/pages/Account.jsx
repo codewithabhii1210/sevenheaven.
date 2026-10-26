@@ -1040,7 +1040,10 @@ export default function Account() {
             <div className="account-content-pane">
               <div className="order-track-box">
                 <h3 className="track-title">Live Dispatch Tracking</h3>
-                <p className="track-desc">Enter any Seven Heaven Order # to inspect delivery timeline & address.</p>
+                <p className="track-desc">
+                  Enter your Seven Heaven Order # to view the live delivery timeline. Full address and
+                  contact details are visible only to the account holder.
+                </p>
 
                 <form
                   onSubmit={(e) => {
