@@ -87,10 +87,14 @@ export default function PincodeChecker() {
               <p className="delivery-perk-text">
                 ✓ Free Shipping on ₹499+ • ✓ Cash on Delivery (COD) Available
               </p>
+              <p className="delivery-disclaimer">
+                *Delivery dates are indicative estimates. Final serviceability is confirmed at
+                checkout and before dispatch.
+              </p>
             </div>
           </div>
           <span className="delivering-to-badge">
-            <CheckCircle2 size={13} /> Pincode {pincode} Serviceable
+            <CheckCircle2 size={13} /> Delivering to Pincode {pincode}
           </span>
         </div>
       )}

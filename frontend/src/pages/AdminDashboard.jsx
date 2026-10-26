@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { api } from '../services/api.js'
@@ -7,15 +7,11 @@ import {
   ShieldAlert,
   Package,
   TrendingUp,
-  Users,
   MessageSquare,
   Mail,
-  CheckCircle2,
   Clock,
-  ArrowRight,
   Sparkles,
   RefreshCw,
-  Search,
 } from 'lucide-react'
 
 export default function AdminDashboard() {

@@ -13,7 +13,6 @@ import {
   Phone,
   ArrowRight,
   Sparkles,
-  Clock,
   CheckCircle2,
   AlertCircle,
   Search,

@@ -10,15 +10,10 @@ import {
   ArrowRight,
   ShieldCheck,
   Truck,
-  HeartHandshake,
-  Check,
-  Copy,
   Star,
-  Quote,
   Flame,
   Award,
   MessageCircle,
-  ShoppingBag,
   Zap,
 } from 'lucide-react'
 
@@ -391,7 +386,7 @@ export default function Home() {
               </p>
               <div className="testimonial-author">
                 <span className="author-name">Ananya Sharma</span>
-                <span className="author-location">Bhopal • Verified Patron</span>
+                <span className="author-location">Bhopal • Patron</span>
               </div>
             </div>
 
@@ -407,7 +402,7 @@ export default function Home() {
               </p>
               <div className="testimonial-author">
                 <span className="author-name">Devansh Kothari</span>
-                <span className="author-location">Mumbai • Verified Patron</span>
+                <span className="author-location">Mumbai • Patron</span>
               </div>
             </div>
 
@@ -423,7 +418,7 @@ export default function Home() {
               </p>
               <div className="testimonial-author">
                 <span className="author-name">Pooja Rathore</span>
-                <span className="author-location">Indore • Verified Patron</span>
+                <span className="author-location">Indore • Patron</span>
               </div>
             </div>
 
@@ -439,10 +434,15 @@ export default function Home() {
               </p>
               <div className="testimonial-author">
                 <span className="author-name">Kabir Mehra</span>
-                <span className="author-location">Delhi • Verified Patron</span>
+                <span className="author-location">Delhi • Patron</span>
               </div>
             </div>
           </div>
+
+          <p className="reviews-disclaimer testimonials-disclaimer">
+            * Showcase testimonials. Verified purchase reviews will be published here as orders
+            are delivered.
+          </p>
         </div>
       </section>
 

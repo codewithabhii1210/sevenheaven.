@@ -17,10 +17,8 @@ import {
   Sparkles,
   Check,
   Copy,
-  ArrowRight,
   Share2,
   Clock,
-  Droplets,
 } from 'lucide-react'
 
 export default function ProductDetail() {
@@ -440,7 +438,7 @@ export default function ProductDetail() {
         <div className="reviews-header-block">
           <div>
             <span className="eyebrow">PATRON VOICES</span>
-            <h2 className="section-heading">Verified Experiences ({product.reviewsCount || 45})</h2>
+            <h2 className="section-heading">Patron Experiences ({product.reviewsCount || 45})</h2>
           </div>
           <div className="rating-summary-card">
             <span className="big-rating-score">{product.rating || 4.8}</span>
@@ -449,7 +447,7 @@ export default function ProductDetail() {
                 <Star key={i} size={16} fill="#D4AF37" stroke="#D4AF37" />
               ))}
             </div>
-            <span className="summary-subtext">Based on verified orders</span>
+            <span className="summary-subtext">Showcase — verified reviews coming soon</span>
           </div>
         </div>
 
@@ -462,7 +460,7 @@ export default function ProductDetail() {
                   <Star key={i} size={13} fill="#D4AF37" stroke="#D4AF37" />
                 ))}
               </div>
-              <span className="verified-badge">✓ Verified Buyer</span>
+              <span className="verified-badge">Patron Review</span>
             </div>
             <h4 className="review-card-title">Pure luxury in every drop</h4>
             <p className="review-card-text">
@@ -479,7 +477,7 @@ export default function ProductDetail() {
                   <Star key={i} size={13} fill="#D4AF37" stroke="#D4AF37" />
                 ))}
               </div>
-              <span className="verified-badge">✓ Verified Buyer</span>
+              <span className="verified-badge">Patron Review</span>
             </div>
             <h4 className="review-card-title">Exceeded all expectations</h4>
             <p className="review-card-text">
@@ -489,6 +487,11 @@ export default function ProductDetail() {
             <span className="review-card-author">Rahul V. • Delhi</span>
           </div>
         </div>
+
+        <p className="reviews-disclaimer">
+          * Showcase reviews. Verified purchase reviews will appear here once patrons receive
+          their orders.
+        </p>
       </section>
 
       {/* Related Products */}

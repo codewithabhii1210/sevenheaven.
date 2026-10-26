@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useWishlist } from '../context/WishlistContext.jsx'
 import { useCart } from '../context/CartContext.jsx'
 import { useLanguage } from '../context/LanguageContext.jsx'
-import { Heart, ShoppingBag, Trash2, ArrowRight, Sparkles } from 'lucide-react'
+import { Heart, ShoppingBag, Trash2, ArrowRight } from 'lucide-react'
 
 export default function Wishlist() {
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist()

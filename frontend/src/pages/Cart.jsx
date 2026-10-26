@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   Tag,
   Sparkles,
-  Check,
   Truck,
 } from 'lucide-react'
 

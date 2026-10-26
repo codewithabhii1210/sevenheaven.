@@ -18,7 +18,6 @@ import {
   Package,
   ShieldAlert,
   ArrowRight,
-  Sparkles,
   Sun,
   Moon,
 } from 'lucide-react'

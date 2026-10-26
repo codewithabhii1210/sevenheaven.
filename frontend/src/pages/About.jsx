@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import Logo7H from '../components/Logo7H.jsx'
-import { Sparkles, Award, Heart, Shield, Droplets, MapPin, ArrowRight } from 'lucide-react'
+import { Sparkles, Award, Heart, Droplets, MapPin, ArrowRight } from 'lucide-react'
 
 export default function About() {
   return (

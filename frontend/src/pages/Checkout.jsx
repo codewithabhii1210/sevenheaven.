@@ -13,7 +13,6 @@ import {
   Lock,
   ArrowRight,
   Phone,
-  Mail,
   MapPin,
   Sparkles,
   Plus,
@@ -22,7 +21,6 @@ import {
   Check,
   Home as HomeIcon,
   Briefcase,
-  AlertCircle,
   X,
 } from 'lucide-react'
 

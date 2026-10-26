@@ -1,5 +1,5 @@
 import { products as localProducts } from '../data/products.js'
-import { coupons as localCoupons, findCoupon as localFindCoupon } from '../data/coupons.js'
+import { findCoupon as localFindCoupon } from '../data/coupons.js'
 
 const isBrowser = typeof window !== 'undefined'
 const isLocalhost =

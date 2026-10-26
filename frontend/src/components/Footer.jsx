@@ -12,8 +12,6 @@ import {
   Truck,
   Sparkles,
   CreditCard,
-  ArrowRight,
-  CheckCircle2,
   MessageCircle,
 } from 'lucide-react'
 
