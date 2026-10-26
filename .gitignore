@@ -26,3 +26,6 @@ yarn-error.log*
 
 .vercel
 .env*
+
+# Local audit/verification scripts (may reference env credentials)
+scripts/
