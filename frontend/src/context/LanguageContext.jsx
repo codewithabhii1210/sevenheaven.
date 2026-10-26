@@ -7,7 +7,7 @@ const translations = {
     // Nav
     home: 'Home',
     shop: 'Shop All',
-    perfumes: 'Perfumes',
+    perfumes: 'Cosmetics',
     primer: 'Primer',
     about: 'Our Story',
     contact: 'Contact',
@@ -62,7 +62,7 @@ const translations = {
     // Nav
     home: 'होम',
     shop: 'सभी उत्पाद',
-    perfumes: 'परफ्यूम',
+    perfumes: 'कॉस्मेटिक्स',
     primer: 'प्राइमर',
     about: 'हमारी कहानी',
     contact: 'संपर्क',

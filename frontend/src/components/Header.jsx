@@ -125,8 +125,8 @@ export default function Header() {
               {t('shop')}
             </Link>
             <Link
-              to="/shop?category=fragrance"
-              className={location.search.includes('fragrance') ? 'active' : ''}
+              to="/shop?category=makeup"
+              className={location.search.includes('makeup') ? 'active' : ''}
             >
               {t('perfumes')}
             </Link>
@@ -401,7 +401,7 @@ export default function Header() {
             <nav className="mobile-drawer-nav">
               <Link to="/">{t('home')}</Link>
               <Link to="/shop">{t('shop')}</Link>
-              <Link to="/shop?category=fragrance">{t('perfumes')}</Link>
+              <Link to="/shop?category=makeup">{t('perfumes')}</Link>
               <Link to="/product/invisible-blur-primer" className="mobile-primer-link">
                 <span>Invisible Blur Primer</span>
                 <span className="badge badge-bestseller">Top Seller</span>

@@ -152,7 +152,8 @@ export default function Shop() {
           <span className="eyebrow">HAUTE PARFUMERIE & COMPLEXION</span>
           <h1 className="shop-hero-title">The Complete Archive</h1>
           <p className="shop-hero-sub">
-            Explore our limited-batch luxury fragrances and the signature Invisible Blur Primer.
+            Explore our limited-batch luxury cosmetics — complexion, lips, eyes & skincare, anchored
+            by the signature Invisible Blur Primer.
             Every creation is hand-crafted and sealed in Bhopal, MP.
           </p>
         </div>
@@ -288,18 +289,6 @@ export default function Shop() {
                     <input
                       type="radio"
                       name="category"
-                      checked={selectedCategory === 'fragrance'}
-                      onChange={() => setSelectedCategory('fragrance')}
-                    />
-                    <span>Haute Perfumes</span>
-                    <span className="count-pill">
-                      ({productsList.filter((p) => p.category === 'fragrance').length})
-                    </span>
-                  </label>
-                  <label className="filter-radio-label">
-                    <input
-                      type="radio"
-                      name="category"
                       checked={selectedCategory === 'makeup'}
                       onChange={() => setSelectedCategory('makeup')}
                     />
@@ -427,7 +416,7 @@ export default function Shop() {
             <div className="mobile-filters-body" style={{ padding: '1rem', overflowY: 'auto' }}>
               <div className="filter-group">
                 <h4 className="filter-group-title">Collection</h4>
-                {['all', 'fragrance', 'makeup'].map((cat) => (
+                {['all', 'makeup'].map((cat) => (
                   <label key={cat} className="filter-radio-label">
                     <input
                       type="radio"

@@ -55,43 +55,43 @@ export default function Home() {
       image: '/images/products/invisible-blur-primer.png',
     },
     {
-      id: 'sh7-noir-essence-50',
-      slug: 'noir-essence',
-      name: 'Noir Essence',
-      subname: 'Dark Oud & Black Amber • 50 ml',
-      categoryLabel: 'Haute Fragrance',
-      price: 1299,
-      mrp: 1999,
-      discount: 35,
-      rating: 4.7,
-      reviewsCount: 84,
-      image: '/images/products/noir-essence.jpg',
-    },
-    {
-      id: 'sh7-golden-oud-100',
-      slug: 'golden-oud',
-      name: 'Golden Oud',
-      subname: 'Warm Saffron & Leather • 100 ml',
-      categoryLabel: 'Royal Haute Perfume',
-      price: 1799,
-      mrp: 2499,
-      discount: 28,
+      id: 'sh7-matte-lipstick-nude',
+      slug: 'velvet-suede-lipstick-bhopal-nude',
+      name: 'Velvet Suede Lipstick • Bhopal Nude',
+      subname: 'Perfect Everyday Warm Nude • 3.8 g',
+      categoryLabel: 'Signature Lip Colour',
+      price: 549,
+      mrp: 799,
+      discount: 31,
       rating: 4.9,
-      reviewsCount: 67,
-      image: '/images/products/golden-oud.jpg',
+      reviewsCount: 178,
+      image: '/images/products/velvet-suede-lipstick-bhopal-nude.jpg',
     },
     {
-      id: 'sh7-lunar-nights-50',
-      slug: 'lunar-nights',
-      name: 'Lunar Nights',
-      subname: 'Velvet Moonlit Jasmine • 50 ml',
-      categoryLabel: 'Intimate Fragrance',
-      price: 1199,
-      mrp: 1699,
-      discount: 29,
-      rating: 4.6,
-      reviewsCount: 41,
-      image: '/images/products/lunar-nights.jpg',
+      id: 'sh7-matte-foundation-30',
+      slug: 'velvet-matte-hd-foundation',
+      name: 'Velvet Matte HD Foundation',
+      subname: '24HR Flawless Complexion • 30 ml',
+      categoryLabel: 'Complexion Couture',
+      price: 899,
+      mrp: 1299,
+      discount: 31,
+      rating: 4.8,
+      reviewsCount: 142,
+      image: '/images/products/velvet-matte-hd-foundation.jpg',
+    },
+    {
+      id: 'sh7-nourishing-lip-oil-8',
+      slug: '24k-gold-nourishing-lip-oil',
+      name: '24K Gold Nourishing Lip Oil',
+      subname: 'Botanical Glass Gloss Elixir • 8 ml',
+      categoryLabel: 'Lip Ritual Luxury',
+      price: 449,
+      mrp: 649,
+      discount: 31,
+      rating: 4.9,
+      reviewsCount: 145,
+      image: '/images/products/24k-gold-nourishing-lip-oil.jpg',
     },
   ]
 
@@ -159,8 +159,9 @@ export default function Home() {
             </h1>
 
             <p className="hero-description">
-              Step into the realm of Seven Heaven. Artisanal Indian fragrances formulated with rare
-              resins, and our acclaimed Invisible Blur Primer designed for high-definition radiance.
+              Step into the realm of Seven Heaven. Professional cosmetics formulated for flawless
+              artistry — led by our acclaimed Invisible Blur Primer, designed for high-definition
+              radiance.
             </p>
 
             {/* Animated Trending Products Showcase (Rotates every 4s) */}
@@ -328,14 +329,6 @@ export default function Home() {
                 className={`tab-btn ${activeCategoryTab === 'all' ? 'active' : ''}`}
               >
                 All Creations ({productsList.length})
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeCategoryTab === 'fragrance'}
-                onClick={() => setActiveCategoryTab('fragrance')}
-                className={`tab-btn ${activeCategoryTab === 'fragrance' ? 'active' : ''}`}
-              >
-                Haute Fragrances ({productsList.filter((p) => p.category === 'fragrance').length || 26})
               </button>
               <button
                 role="tab"

@@ -174,16 +174,16 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/product/noir-essence">Noir Essence Eau de Parfum</Link>
+                <Link to="/product/velvet-suede-lipstick-bhopal-nude">Velvet Suede Lipstick • Bhopal Nude</Link>
               </li>
               <li>
-                <Link to="/product/golden-oud">Golden Oud Eau de Parfum</Link>
+                <Link to="/product/velvet-matte-hd-foundation">Velvet Matte HD Foundation</Link>
               </li>
               <li>
-                <Link to="/product/lunar-nights">Lunar Nights Eau de Parfum</Link>
+                <Link to="/product/24k-gold-nourishing-lip-oil">24K Gold Nourishing Lip Oil</Link>
               </li>
               <li>
-                <Link to="/product/amber-essence">Amber Essence Eau de Parfum</Link>
+                <Link to="/product/waterproof-gel-kohl-smokey-kajal">Waterproof Gel Kohl Kajal</Link>
               </li>
               <li>
                 <Link to="/shop">View Full Catalog (Shop All)</Link>
@@ -250,15 +250,15 @@ export default function Footer() {
           <div className="seo-tags">
             <Link to="/product/invisible-blur-primer">Invisible Blur Primer</Link>
             <span>|</span>
-            <Link to="/shop?category=fragrance">Luxury Perfumes India</Link>
+            <Link to="/shop?category=makeup">Luxury Cosmetics India</Link>
             <span>|</span>
-            <Link to="/product/golden-oud">Golden Oud Saffron</Link>
+            <Link to="/product/velvet-suede-lipstick-bhopal-nude">Velvet Suede Nude Lipstick</Link>
             <span>|</span>
-            <Link to="/product/noir-essence">Black Amber Noir EDP</Link>
+            <Link to="/product/velvet-matte-hd-foundation">Velvet Matte HD Foundation</Link>
             <span>|</span>
-            <Link to="/product/lunar-nights">Long Lasting Women Perfume</Link>
+            <Link to="/product/24k-gold-nourishing-lip-oil">24K Gold Lip Oil</Link>
             <span>|</span>
-            <Link to="/shop?sort=price_asc">Perfumes Under 1500</Link>
+            <Link to="/shop?sort=price_asc">Cosmetics Under 1000</Link>
             <span>|</span>
             <Link to="/contact-us">Seven Heaven Bhopal Cosmetics</Link>
             <span>|</span>
