@@ -25,6 +25,8 @@ const Wishlist = lazy(() => import('./pages/Wishlist.jsx'))
 const About = lazy(() => import('./pages/About.jsx'))
 const Contact = lazy(() => import('./pages/Contact.jsx'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard.jsx'))
+const NotFound = lazy(() => import('./pages/NotFound.jsx'))
+const Policy = lazy(() => import('./pages/Policy.jsx'))
 
 function PageFallback() {
   return (
@@ -74,7 +76,11 @@ export default function App() {
                         <Route path="/about-us" element={<About />} />
                         <Route path="/contact-us" element={<Contact />} />
                         <Route path="/admin" element={<AdminDashboard />} />
-                        <Route path="*" element={<Home />} />
+                        <Route path="/shipping-policy" element={<Policy />} />
+                        <Route path="/cod-policy" element={<Policy />} />
+                        <Route path="/privacy-policy" element={<Policy />} />
+                        <Route path="/terms" element={<Policy />} />
+                        <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>
                   </main>

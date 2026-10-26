@@ -22,7 +22,11 @@ export default function Shop() {
   const [selectedFamily, setSelectedFamily] = useState('all')
   const [selectedGender, setSelectedGender] = useState('all')
   const [priceMax, setPriceMax] = useState(3000)
-  const [sortBy, setSortBy] = useState('featured')
+  const [sortBy, setSortBy] = useState(() => {
+    const validSorts = ['featured', 'price_asc', 'price_desc', 'rating', 'newest']
+    const urlSort = searchParams.get('sort')
+    return validSorts.includes(urlSort) ? urlSort : 'featured'
+  })
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
 
   useEffect(() => {
@@ -41,8 +45,11 @@ export default function Shop() {
   useEffect(() => {
     const cat = searchParams.get('category')
     const search = searchParams.get('search')
+    const sort = searchParams.get('sort')
+    const validSorts = ['featured', 'price_asc', 'price_desc', 'rating', 'newest']
     if (cat) setSelectedCategory(cat)
     if (search) setSearchQuery(search)
+    if (sort && validSorts.includes(sort)) setSortBy(sort)
   }, [searchParams])
 
   // Extract available fragrance families

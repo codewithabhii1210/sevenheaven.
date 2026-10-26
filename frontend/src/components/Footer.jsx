@@ -210,14 +210,16 @@ export default function Footer() {
                 <Link to="/wishlist">Saved Wishlist</Link>
               </li>
               <li>
-                <a href="#shipping-terms" onClick={(e) => { e.preventDefault(); alert('Shipping Policy: Free delivery on all orders above ₹499. Orders below ₹499 are charged ₹49 standard shipping. Cash on Delivery handling fee is ₹25.'); }}>
-                  Shipping & Delivery Policy
-                </a>
+                <Link to="/shipping-policy">Shipping & Delivery Policy</Link>
               </li>
               <li>
-                <a href="#cod-terms" onClick={(e) => { e.preventDefault(); alert('COD Policy: Cash on Delivery is available across all serviceable Indian pincodes with ₹25 handling fee. Pay cash or UPI upon delivery.'); }}>
-                  Cash on Delivery (COD) Info
-                </a>
+                <Link to="/cod-policy">Cash on Delivery (COD) Info</Link>
+              </li>
+              <li>
+                <Link to="/privacy-policy">Privacy Policy</Link>
+              </li>
+              <li>
+                <Link to="/terms">Terms & Conditions</Link>
               </li>
             </ul>
           </div>

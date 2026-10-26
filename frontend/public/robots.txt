@@ -2,6 +2,9 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /checkout
-Disallow: /account
+Disallow: /my-account
+Disallow: /orders
+Disallow: /cart
+Disallow: /wishlist
 
 Sitemap: https://sevenheaven.co.in/sitemap.xml
