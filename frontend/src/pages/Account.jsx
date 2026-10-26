@@ -1167,13 +1167,6 @@ export default function Account() {
                 <span>{loading ? 'Authenticating...' : 'Sign In to Your Account'}</span>
                 <ArrowRight size={16} />
               </button>
-
-              <div className="auth-hint-box">
-                <Sparkles size={14} className="gold-text" />
-                <span>
-                  Admin Login: <code>sevenheavencosmetics@gmail.com</code> / <code>Sh7Admin#2026</code>
-                </span>
-              </div>
             </form>
           )}
 

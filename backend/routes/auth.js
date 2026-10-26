@@ -103,15 +103,7 @@ router.post('/login', authLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' })
     }
 
-    let isMatch = await bcrypt.compare(password, user.passwordHash)
-
-    // Master Admin safety check: handle unquoted # comment truncation in .env
-    const adminEmail = (process.env.ADMIN_EMAIL || 'sevenheavencosmetics@gmail.com').toLowerCase()
-    if (!isMatch && user.email === adminEmail && (password === 'Sh7Admin#2026' || password === 'Sh7Admin')) {
-      isMatch = true
-      user.passwordHash = await bcrypt.hash('Sh7Admin#2026', 10)
-      await user.save()
-    }
+    const isMatch = await bcrypt.compare(password, user.passwordHash)
 
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid email or password' })

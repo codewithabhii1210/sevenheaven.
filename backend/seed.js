@@ -34,25 +34,29 @@ async function seed() {
       console.log(`   ✓ Coupon: ${c.code} (${c.type}: ${c.value}${c.type === 'percent' ? '%' : ''})`)
     }
 
-    // 3. Seed Default Admin
-    const adminEmail = process.env.ADMIN_EMAIL || 'sevenheavencosmetics@gmail.com'
-    const adminPassword = process.env.ADMIN_PASSWORD || 'Sh7Admin#2026'
+    // 3. Seed Default Admin (only when ADMIN_PASSWORD is provided — no hardcoded fallback)
+    const adminEmail = process.env.ADMIN_EMAIL
+    const adminPassword = process.env.ADMIN_PASSWORD
 
-    console.log(`👑 Creating/Updating Admin (${adminEmail})...`)
-    const passwordHash = await bcrypt.hash(adminPassword, 10)
+    if (!adminEmail || !adminPassword) {
+      console.log('⚠️  Skipping admin seed: ADMIN_EMAIL / ADMIN_PASSWORD not set in environment')
+    } else {
+      console.log(`👑 Creating/Updating Admin (${adminEmail})...`)
+      const passwordHash = await bcrypt.hash(adminPassword, 12)
 
-    await User.findOneAndUpdate(
-      { email: adminEmail.toLowerCase() },
-      {
-        name: 'Seven Heaven Admin',
-        email: adminEmail.toLowerCase(),
-        passwordHash,
-        role: 'admin',
-        phone: '9201991418',
-      },
-      { upsert: true, new: true }
-    )
-    console.log(`   ✓ Admin ready: ${adminEmail}`)
+      await User.findOneAndUpdate(
+        { email: adminEmail.toLowerCase() },
+        {
+          name: 'Seven Heaven Admin',
+          email: adminEmail.toLowerCase(),
+          passwordHash,
+          role: 'admin',
+          phone: '9201991418',
+        },
+        { upsert: true, new: true }
+      )
+      console.log(`   ✓ Admin ready: ${adminEmail}`)
+    }
 
     console.log('\n🎉 Database Seeded Successfully!')
   } catch (err) {

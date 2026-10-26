@@ -420,8 +420,13 @@ export default function Checkout() {
           throw new Error(rzpOrderData?.error || 'Failed to initiate Razorpay transaction')
         }
 
+        // Key must come from the backend — never fall back to a hardcoded key
+        if (!rzpOrderData.keyId) {
+          throw new Error('Payment gateway is not configured. Please try Cash on Delivery.')
+        }
+
         const options = {
-          key: rzpOrderData.keyId || 'rzp_test_ToeDcL6X72kGWz',
+          key: rzpOrderData.keyId,
           amount: rzpOrderData.amount,
           currency: rzpOrderData.currency || 'INR',
           name: 'Seven Heaven Cosmetics',
