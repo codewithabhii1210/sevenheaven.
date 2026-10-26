@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import AnnouncementBar from './AnnouncementBar.jsx'
+import { Link, useLocation } from 'react-router-dom'
 import Logo7H from './Logo7H.jsx'
 import { useCart } from '../context/CartContext.jsx'
 import { useWishlist } from '../context/WishlistContext.jsx'
@@ -8,7 +7,6 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { useLanguage } from '../context/LanguageContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 import {
-  Search,
   Heart,
   ShoppingBag,
   User,
@@ -17,17 +15,13 @@ import {
   LogOut,
   Package,
   ShieldAlert,
-  ArrowRight,
   Sun,
   Moon,
 } from 'lucide-react'
-import { products } from '../data/products.js'
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false)
 
   const { itemsCount, openCart } = useCart()
@@ -36,9 +30,7 @@ export default function Header() {
   const { t, lang, toggleLanguage } = useLanguage()
   const { theme, toggleTheme } = useTheme()
 
-  const navigate = useNavigate()
   const location = useLocation()
-  const searchInputRef = useRef(null)
   const accountDropdownRef = useRef(null)
 
   // Track scroll for sticky glassmorphism header
@@ -53,16 +45,8 @@ export default function Header() {
   // Close menus on route change
   useEffect(() => {
     setIsMobileMenuOpen(false)
-    setIsSearchOpen(false)
     setIsAccountDropdownOpen(false)
   }, [location.pathname])
-
-  // Focus search input when opened
-  useEffect(() => {
-    if (isSearchOpen && searchInputRef.current) {
-      setTimeout(() => searchInputRef.current.focus(), 100)
-    }
-  }, [isSearchOpen])
 
   // Click outside to close account dropdown
   useEffect(() => {
@@ -75,30 +59,8 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Filter products for search overlay
-  const searchResults = searchQuery.trim()
-    ? products.filter(
-        (p) =>
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.shortDesc?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.subname?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : []
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      setIsSearchOpen(false)
-      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)
-    }
-  }
-
   return (
     <>
-      {/* Top Ticker Announcement */}
-      <AnnouncementBar />
-
       {/* Main Luxury Header */}
       <header className={`site-header ${isScrolled ? 'is-scrolled' : ''}`}>
         <div className="container header-inner">
@@ -130,13 +92,6 @@ export default function Header() {
             >
               {t('perfumes')}
             </Link>
-            <Link
-              to="/product/invisible-blur-primer"
-              className="nav-link-primer"
-            >
-              <span className="gold-text">Primer</span>
-              <span className="nav-tag-badge">Bestseller</span>
-            </Link>
             <Link to="/about-us" className={location.pathname === '/about-us' ? 'active' : ''}>
               {t('about')}
             </Link>
@@ -147,16 +102,6 @@ export default function Header() {
 
           {/* Header Action Icons */}
           <div className="header-actions">
-            {/* Search Trigger */}
-            <button
-              onClick={() => setIsSearchOpen(true)}
-              className="action-icon-btn"
-              title="Search products"
-              aria-label="Search products"
-            >
-              <Search size={20} />
-            </button>
-
             {/* Wishlist Link */}
             <Link
               to="/wishlist"
@@ -273,116 +218,6 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Search Overlay Modal */}
-      {isSearchOpen && (
-        <div className="search-modal-overlay" onClick={() => setIsSearchOpen(false)}>
-          <div className="search-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="search-modal-header">
-              <form onSubmit={handleSearchSubmit} className="search-bar-form">
-                <Search size={22} className="search-input-icon" />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search perfumes, primer, notes (oud, amber, rose)..."
-                  className="search-input-field"
-                  aria-label="Search catalog"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="search-clear-btn"
-                  >
-                    <X size={18} />
-                  </button>
-                )}
-              </form>
-              <button
-                onClick={() => setIsSearchOpen(false)}
-                className="search-close-btn"
-                aria-label="Close search"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            {/* Instant Search Results Preview */}
-            <div className="search-results-area">
-              {searchQuery.trim() ? (
-                searchResults.length > 0 ? (
-                  <div className="search-results-grid">
-                    <p className="search-results-count">
-                      Found {searchResults.length} creations matching &ldquo;{searchQuery}&rdquo;
-                    </p>
-                    <div className="results-list">
-                      {searchResults.map((product) => (
-                        <Link
-                          key={product.id}
-                          to={`/product/${product.slug || product.id}`}
-                          onClick={() => setIsSearchOpen(false)}
-                          className="search-result-card"
-                        >
-                          <img src={product.image} alt={product.name} />
-                          <div className="result-info">
-                            <span className="result-category">{product.category}</span>
-                            <h4 className="result-title">{product.name}</h4>
-                            <span className="result-price">₹{product.price}</span>
-                          </div>
-                          <ArrowRight size={16} className="result-arrow" />
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="search-no-results">
-                    <p>No products found for &ldquo;{searchQuery}&rdquo;</p>
-                    <span className="search-suggestion">
-                      Try searching &ldquo;primer&rdquo;, &ldquo;oud&rdquo;, &ldquo;noir&rdquo;, or &ldquo;amber&rdquo;
-                    </span>
-                  </div>
-                )
-              ) : (
-                <div className="search-quick-tags">
-                  <span className="quick-tag-label">Popular Searches:</span>
-                  <div className="tags-row">
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery('primer')}
-                      className="tag-btn"
-                    >
-                      Invisible Blur Primer
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery('oud')}
-                      className="tag-btn"
-                    >
-                      Golden Oud
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery('noir')}
-                      className="tag-btn"
-                    >
-                      Noir Essence
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery('lunar')}
-                      className="tag-btn"
-                    >
-                      Lunar Nights
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Mobile Slide-in Drawer Navigation */}
       {isMobileMenuOpen && (
         <div className="mobile-drawer-overlay" onClick={() => setIsMobileMenuOpen(false)}>
@@ -402,10 +237,6 @@ export default function Header() {
               <Link to="/">{t('home')}</Link>
               <Link to="/shop">{t('shop')}</Link>
               <Link to="/shop?category=makeup">{t('perfumes')}</Link>
-              <Link to="/product/invisible-blur-primer" className="mobile-primer-link">
-                <span>Invisible Blur Primer</span>
-                <span className="badge badge-bestseller">Top Seller</span>
-              </Link>
               <Link to="/about-us">{t('about')}</Link>
               <Link to="/contact-us">{t('contact')}</Link>
               <Link to="/wishlist">
@@ -442,12 +273,6 @@ export default function Header() {
                     <span className={lang === 'hi' ? 'active-lang' : ''}>हिन्दी</span>
                   </button>
                 </div>
-              </div>
-              <div className="mobile-contact-row">
-                <a href="tel:+919201991418" className="mobile-phone-link">
-                  📞 +91 92019 91418
-                </a>
-                <span className="mobile-hours">Mon–Sat 10:00 AM – 7:00 PM</span>
               </div>
             </div>
           </aside>

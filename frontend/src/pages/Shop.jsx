@@ -149,13 +149,7 @@ export default function Shop() {
       {/* Shop Header Banner */}
       <section className="shop-hero-banner">
         <div className="container shop-hero-inner">
-          <span className="eyebrow">HAUTE PARFUMERIE & COMPLEXION</span>
-          <h1 className="shop-hero-title">The Complete Archive</h1>
-          <p className="shop-hero-sub">
-            Explore our limited-batch luxury cosmetics — complexion, lips, eyes & skincare, anchored
-            by the signature Invisible Blur Primer.
-            Every creation is hand-crafted and sealed in Bhopal, MP.
-          </p>
+          <h1 className="shop-hero-title">Shop</h1>
         </div>
       </section>
 
@@ -168,7 +162,7 @@ export default function Shop() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, notes (oud, amber, rose)..."
+              placeholder="Search products..."
               className="shop-search-input"
               aria-label="Filter products"
             />
@@ -316,32 +310,12 @@ export default function Shop() {
                   className="price-range-slider"
                 />
                 <div className="price-range-labels">
-                  <span>₹499 (Primer)</span>
+                  <span>₹499</span>
                   <span>₹3,000</span>
                 </div>
               </div>
 
-              {/* 3. Gender / Profile Filter */}
-              <div className="filter-group">
-                <h4 className="filter-group-title">Audience Profile</h4>
-                <div className="filter-options">
-                  {['all', 'unisex', 'men', 'women'].map((gender) => (
-                    <label key={gender} className="filter-radio-label">
-                      <input
-                        type="radio"
-                        name="gender"
-                        checked={selectedGender === gender}
-                        onChange={() => setSelectedGender(gender)}
-                      />
-                      <span style={{ textTransform: 'capitalize' }}>
-                        {gender === 'all' ? 'All Genders / Unisex' : gender}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* 4. Fragrance Notes Filter */}
+              {/* 3. Fragrance Notes Filter */}
               {fragranceFamilies.length > 0 && (
                 <div className="filter-group">
                   <h4 className="filter-group-title">Key Olfactory Notes</h4>
@@ -364,15 +338,6 @@ export default function Shop() {
                   </div>
                 </div>
               )}
-
-              {/* Bhopal Dispatch Guarantee Box */}
-              <div className="sidebar-perk-box">
-                <Sparkles size={16} className="gold-text" />
-                <p>
-                  <strong>Direct Bhopal Dispatch:</strong> All orders are double-boxed with velvet
-                  packaging and shipped via express courier.
-                </p>
-              </div>
             </div>
           </aside>
 
@@ -381,16 +346,17 @@ export default function Shop() {
             {loading ? (
               <div className="shop-loading-state">
                 <Sparkles size={32} className="gold-text spinning" />
-                <p>Curating your luxury collection...</p>
+                <p>Loading...</p>
               </div>
             ) : sortedProducts.length === 0 ? (
               <div className="shop-empty-state">
                 <Sparkles size={40} className="gold-text" />
-                <h3>No creations matched your criteria</h3>
-                <p>Try resetting your price slider or search keyword.</p>
-                <button onClick={clearAllFilters} className="btn btn-gold btn-sm">
-                  Clear All Filters
-                </button>
+                <h3>No products found</h3>
+                {hasActiveFilters && (
+                  <button onClick={clearAllFilters} className="btn btn-gold btn-sm">
+                    Clear Filters
+                  </button>
+                )}
               </div>
             ) : (
               <div className="shop-grid">

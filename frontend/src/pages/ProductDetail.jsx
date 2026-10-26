@@ -3,22 +3,15 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { api } from '../services/api.js'
 import { useCart } from '../context/CartContext.jsx'
 import { useWishlist } from '../context/WishlistContext.jsx'
-import { useToast } from '../context/ToastContext.jsx'
 import PincodeChecker from '../components/PincodeChecker.jsx'
 import FragrancePyramid from '../components/FragrancePyramid.jsx'
 import ProductCard from '../components/ProductCard.jsx'
 import {
-  Star,
   Heart,
   ShoppingBag,
   Zap,
-  ShieldCheck,
-  Truck,
-  Sparkles,
   Check,
-  Copy,
-  Share2,
-  Clock,
+  Sparkles,
 } from 'lucide-react'
 
 export default function ProductDetail() {
@@ -26,15 +19,13 @@ export default function ProductDetail() {
   const navigate = useNavigate()
   const { addItem } = useCart()
   const { isInWishlist, toggleWishlist } = useWishlist()
-  const { showToast } = useToast()
 
   const [product, setProduct] = useState(null)
   const [allProducts, setAllProducts] = useState([])
   const [selectedImage, setSelectedImage] = useState('')
   const [qty, setQty] = useState(1)
   const [loading, setLoading] = useState(true)
-  const [copiedCoupon, setCopiedCoupon] = useState(false)
-  const [activeTab, setActiveTab] = useState('description') // description | howToUse | reviews
+  const [activeTab, setActiveTab] = useState('description')
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -52,7 +43,7 @@ export default function ProductDetail() {
     return (
       <div className="pdp-loading-screen">
         <Sparkles size={36} className="gold-text spinning" />
-        <p>Unveiling luxury formulation...</p>
+        <p>Loading...</p>
       </div>
     )
   }
@@ -60,21 +51,16 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <div className="container pdp-not-found">
-        <h2>Creation Not Found</h2>
-        <p>The product you are looking for is not in our current archive.</p>
+        <h2>Product Not Found</h2>
+        <p>This product is not available.</p>
         <Link to="/shop" className="btn btn-gold">
-          Browse Catalog
+          Browse Shop
         </Link>
       </div>
     )
   }
 
   const isFavorited = isInWishlist(product.id)
-  const discount =
-    product.mrp && product.mrp > product.price
-      ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
-      : 0
-
   const isPerfume = product.category === 'fragrance'
   const relatedProducts = allProducts.filter((p) => p.id !== product.id).slice(0, 4)
 
@@ -85,25 +71,6 @@ export default function ProductDetail() {
   const handleBuyNow = () => {
     addItem(product, qty, false)
     navigate('/checkout')
-  }
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `${product.name} — Seven Heaven Cosmetics`,
-        url: window.location.href,
-      })
-    } else {
-      navigator.clipboard.writeText(window.location.href)
-      showToast('Product link copied to clipboard!', 'gold')
-    }
-  }
-
-  const copyCouponCode = (code) => {
-    navigator.clipboard.writeText(code)
-    setCopiedCoupon(true)
-    showToast(`Code "${code}" copied! Apply at checkout.`, 'gold')
-    setTimeout(() => setCopiedCoupon(false), 3000)
   }
 
   const imagesList = product.gallery && product.gallery.length > 0 ? product.gallery : [product.image]
@@ -134,11 +101,6 @@ export default function ProductDetail() {
               alt={product.name}
               className="pdp-main-image"
             />
-            {product.badge && (
-              <span className={`pdp-badge badge-${product.badge}`}>
-                {product.badge === 'bestseller' ? '★ Bestseller' : product.badge}
-              </span>
-            )}
             <button
               onClick={() => toggleWishlist(product)}
               className={`pdp-wishlist-btn ${isFavorited ? 'is-active' : ''}`}
@@ -167,81 +129,18 @@ export default function ProductDetail() {
               ))}
             </div>
           )}
-
-          {/* Trust Guarantees under images */}
-          <div className="pdp-trust-grid">
-            <div className="trust-cell">
-              <Truck size={18} className="gold-text" />
-              <div>
-                <strong>Free Shipping</strong>
-                <span>On orders ₹499+</span>
-              </div>
-            </div>
-            <div className="trust-cell">
-              <ShieldCheck size={18} className="gold-text" />
-              <div>
-                <strong>Cash on Delivery</strong>
-                <span>Pay upon arrival</span>
-              </div>
-            </div>
-            <div className="trust-cell">
-              <Sparkles size={18} className="gold-text" />
-              <div>
-                <strong>100% Genuine</strong>
-                <span>Direct from Bhopal HQ</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Right: Product Details & Purchase Form */}
         <div className="pdp-details-col">
-          {/* Eyebrow & Category */}
-          <div className="pdp-eyebrow-row">
-            <span className="pdp-brand-tag">{product.brand || 'Seven Heaven Cosmetics'}</span>
-            <button onClick={handleShare} className="pdp-share-btn" title="Share Creation">
-              <Share2 size={16} />
-              <span>Share</span>
-            </button>
-          </div>
-
-          {/* Title & Subname */}
+          {/* Title */}
           <h1 className="pdp-title">{product.name}</h1>
-          {product.subname && <p className="pdp-subname">{product.subname}</p>}
 
-          {/* Rating & Reviews Bar */}
-          <div className="pdp-rating-row">
-            <div className="stars-wrap">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  size={15}
-                  fill={i < Math.floor(product.rating || 5) ? '#D4AF37' : 'none'}
-                  stroke="#D4AF37"
-                />
-              ))}
-            </div>
-            <span className="rating-score">{product.rating || 4.8} / 5</span>
-            <span className="rating-sep">•</span>
-            <a href="#patron-reviews" className="reviews-link">
-              {product.reviewsCount || 45} Patron Reviews
-            </a>
-          </div>
-
-          {/* Price Block */}
+          {/* Price */}
           <div className="pdp-price-block">
             <div className="price-row">
               <span className="current-price">₹{product.price}</span>
-              {product.mrp && product.mrp > product.price && (
-                <>
-                  <span className="mrp-price">₹{product.mrp}</span>
-                  <span className="save-badge">Save ₹{product.mrp - product.price} ({discount}% OFF)</span>
-                </>
-              )}
             </div>
-            <p className="tax-inclusive-text">
-              Inclusive of all taxes (GST) • Direct Bhopal Formulation
-            </p>
           </div>
 
           {/* Size / Volume Display */}
@@ -256,35 +155,9 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {/* Available Coupon Offer Banner */}
-          {product.couponCode && (
-            <div className="pdp-coupon-callout">
-              <div className="coupon-callout-icon">
-                <Sparkles size={16} className="gold-text" />
-              </div>
-              <div className="coupon-callout-body">
-                <p className="coupon-callout-title">
-                  Special Patron Privilege Available!
-                </p>
-                <p className="coupon-callout-sub">
-                  Use coupon code <strong className="gold-text">{product.couponCode}</strong> for instant discount.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => copyCouponCode(product.couponCode)}
-                className="btn btn-gold-outline btn-sm"
-              >
-                {copiedCoupon ? <Check size={13} /> : <Copy size={13} />}
-                <span>{copiedCoupon ? 'Copied' : 'Copy'}</span>
-              </button>
-            </div>
-          )}
-
-          {/* Quantity Stepper & Dual CTAs */}
+          {/* Quantity & CTAs */}
           <div className="pdp-cta-block">
             <div className="qty-selector-wrap">
-              <span className="qty-label">Quantity:</span>
               <div className="qty-stepper">
                 <button
                   type="button"
@@ -348,7 +221,7 @@ export default function ProductDetail() {
             onClick={() => setActiveTab('description')}
             className={`tab-link ${activeTab === 'description' ? 'active' : ''}`}
           >
-            The Creation
+            Description
           </button>
           <button
             role="tab"
@@ -356,7 +229,7 @@ export default function ProductDetail() {
             onClick={() => setActiveTab('howToUse')}
             className={`tab-link ${activeTab === 'howToUse' ? 'active' : ''}`}
           >
-            Application Ritual
+            How to Use
           </button>
           <button
             role="tab"
@@ -364,7 +237,7 @@ export default function ProductDetail() {
             onClick={() => setActiveTab('specifications')}
             className={`tab-link ${activeTab === 'specifications' ? 'active' : ''}`}
           >
-            Formulation Details
+            Specifications
           </button>
         </div>
 
@@ -387,16 +260,7 @@ export default function ProductDetail() {
 
           {activeTab === 'howToUse' && (
             <div className="tab-pane">
-              <h4 className="ritual-title">How to Experience {product.name}</h4>
-              <p className="tab-desc-text">{product.howToUse || 'Apply evenly or spray on pulse points.'}</p>
-              <div className="ritual-tips-box">
-                <Clock size={16} className="gold-text" />
-                <p>
-                  <strong>Patron Tip:</strong> For perfumes, do not rub wrists together after spraying;
-                  let the top notes evaporate naturally to experience the full scent progression. For the
-                  primer, allow 60 seconds to set before applying foundation.
-                </p>
-              </div>
+              <p className="tab-desc-text">{product.howToUse || 'Apply evenly.'}</p>
             </div>
           )}
 
@@ -433,73 +297,11 @@ export default function ProductDetail() {
         </div>
       </section>
 
-      {/* Patron Reviews Section */}
-      <section className="container pdp-reviews-section" id="patron-reviews">
-        <div className="reviews-header-block">
-          <div>
-            <span className="eyebrow">PATRON VOICES</span>
-            <h2 className="section-heading">Patron Experiences ({product.reviewsCount || 45})</h2>
-          </div>
-          <div className="rating-summary-card">
-            <span className="big-rating-score">{product.rating || 4.8}</span>
-            <div className="summary-stars">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} size={16} fill="#D4AF37" stroke="#D4AF37" />
-              ))}
-            </div>
-            <span className="summary-subtext">Showcase — verified reviews coming soon</span>
-          </div>
-        </div>
-
-        {/* Reviews Cards Grid */}
-        <div className="pdp-reviews-grid">
-          <div className="pdp-review-card">
-            <div className="review-card-top">
-              <div className="review-stars">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={13} fill="#D4AF37" stroke="#D4AF37" />
-                ))}
-              </div>
-              <span className="verified-badge">Patron Review</span>
-            </div>
-            <h4 className="review-card-title">Pure luxury in every drop</h4>
-            <p className="review-card-text">
-              &ldquo;The finish is sublime. Truly competes with high-end international brands at a
-              fraction of the price. Packaging was exceptionally elegant.&rdquo;
-            </p>
-            <span className="review-card-author">Kavita M. • Bhopal</span>
-          </div>
-
-          <div className="pdp-review-card">
-            <div className="review-card-top">
-              <div className="review-stars">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={13} fill="#D4AF37" stroke="#D4AF37" />
-                ))}
-              </div>
-              <span className="verified-badge">Patron Review</span>
-            </div>
-            <h4 className="review-card-title">Exceeded all expectations</h4>
-            <p className="review-card-text">
-              &ldquo;I ordered on Cash on Delivery and received it in 3 days. Superb longevity and
-              texture. Definitely returning for full size bottles.&rdquo;
-            </p>
-            <span className="review-card-author">Rahul V. • Delhi</span>
-          </div>
-        </div>
-
-        <p className="reviews-disclaimer">
-          * Showcase reviews. Verified purchase reviews will appear here once patrons receive
-          their orders.
-        </p>
-      </section>
-
       {/* Related Products */}
       {relatedProducts.length > 0 && (
         <section className="container pdp-related-section">
           <div className="section-header-centered">
-            <span className="eyebrow">CURATED COMPLEMENTS</span>
-            <h2 className="section-heading">You May Also Admire</h2>
+            <h2 className="section-heading">You May Also Like</h2>
             <div className="gold-divider-center" />
           </div>
 
