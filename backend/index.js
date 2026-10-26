@@ -113,7 +113,15 @@ app.use(cors(corsOptions))
 // 5. BODY PARSERS & SANITIZATION (DOS & Injection Prevention)
 // ============================================================
 // Limit JSON payload to 50KB to block large memory allocation DDoS attacks
-app.use(express.json({ limit: '50kb' }))
+// verify hook preserves the raw body for Razorpay webhook HMAC signature checks
+app.use(
+  express.json({
+    limit: '50kb',
+    verify: (req, _res, buf) => {
+      req.rawBody = buf
+    },
+  })
+)
 app.use(express.urlencoded({ extended: true, limit: '50kb' }))
 app.use(cookieParser())
 

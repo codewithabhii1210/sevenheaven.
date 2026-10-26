@@ -478,6 +478,10 @@ export default function Checkout() {
           rzp.on('payment.failed', (failResponse) => {
             setIsSubmitting(false)
             showToast(`Payment failed: ${failResponse.error?.description || 'Payment rejected'}`, 'info')
+            // Tell the server so reserved stock is released (idempotent, non-blocking)
+            api.reportRazorpayFailure(orderNo).catch(() => {
+              // Webhook remains the safety net if this report never lands
+            })
           })
           rzp.open()
         } catch (openErr) {

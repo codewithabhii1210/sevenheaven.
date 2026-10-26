@@ -145,6 +145,13 @@ export const api = {
     })
   },
 
+  async reportRazorpayFailure(orderNo) {
+    return await request('/api/razorpay/payment-failed', {
+      method: 'POST',
+      body: JSON.stringify({ orderNo }),
+    })
+  },
+
   // ---------- AUTH ----------
   async login(email, password) {
     const data = await request('/api/auth/login', {

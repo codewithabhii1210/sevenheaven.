@@ -5,6 +5,7 @@ import { Order } from '../models/index.js'
 import { sanitize } from '../middleware/sanitize.js'
 import { orderLimiter } from '../middleware/rateLimiter.js'
 import { connectDB } from '../db.js'
+import { releaseOrderStock, reReserveOrderStock } from '../utils/stock.js'
 
 const router = Router()
 
@@ -130,7 +131,12 @@ router.post('/verify', async (req, res) => {
 
     order.paymentStatus = 'paid'
     order.status = 'placed'
+    order.razorpayPaymentId = razorpay_payment_id
     order.updatedAt = new Date()
+    // Paid wins: if stock was released after an earlier failure/cancel, re-reserve it
+    if (await reReserveOrderStock(order)) {
+      order.stockRestored = false // keep in-memory doc in sync with DB
+    }
     await order.save()
 
     res.json({
@@ -142,6 +148,99 @@ router.post('/verify', async (req, res) => {
   } catch (err) {
     console.error('Razorpay Verify Error:', err)
     res.status(500).json({ error: 'Payment verification failed' })
+  }
+})
+
+// POST /api/razorpay/payment-failed
+// Client reports a failed payment attempt (widget payment.failed event).
+// Marks order failed + releases reserved stock exactly once (idempotent).
+router.post('/payment-failed', orderLimiter, async (req, res) => {
+  try {
+    await connectDB()
+    const orderNo = sanitize.string(req.body?.orderNo, 40)
+    if (!orderNo) return res.status(400).json({ error: 'orderNo is required' })
+
+    const order = await Order.findOne({ orderNo })
+    if (!order) return res.status(404).json({ error: 'Order not found' })
+
+    // Never touch an order that already succeeded
+    if (order.paymentStatus === 'paid') {
+      return res.json({ success: true, ignored: true })
+    }
+
+    order.paymentStatus = 'failed'
+    await order.save()
+    const stockRestored = await releaseOrderStock(order)
+
+    res.json({ success: true, stockRestored })
+  } catch (err) {
+    console.error('Razorpay payment-failed report error:', err)
+    res.status(500).json({ error: 'Failed to record payment failure' })
+  }
+})
+
+// POST /api/razorpay/webhook — Server-to-server payment reconciliation.
+// Signature: HMAC-SHA256(rawBody, RAZORPAY_WEBHOOK_SECRET) vs x-razorpay-signature.
+// Covers the "browser closed after successful charge" gap (verify never called).
+router.post('/webhook', async (req, res) => {
+  try {
+    await connectDB()
+
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET
+    const signature = req.get('x-razorpay-signature')
+
+    if (!secret) {
+      // Never accept unsigned webhooks as truth
+      return res.status(503).json({ error: 'Webhook secret not configured' })
+    }
+    if (!signature || !req.rawBody) {
+      return res.status(400).json({ error: 'Missing webhook signature or body' })
+    }
+
+    const expected = crypto.createHmac('sha256', secret).update(req.rawBody).digest('hex')
+    const expectedBuf = Buffer.from(expected, 'utf8')
+    const receivedBuf = Buffer.from(String(signature), 'utf8')
+    if (expectedBuf.length !== receivedBuf.length || !crypto.timingSafeEqual(expectedBuf, receivedBuf)) {
+      console.warn('[SECURITY WARNING] Invalid Razorpay webhook signature rejected')
+      return res.status(401).json({ error: 'Invalid webhook signature' })
+    }
+
+    const event = req.body
+    const eventType = event?.event
+    const paymentEntity = event?.payload?.payment?.entity
+    const rzpOrderId = paymentEntity?.order_id
+
+    if (!rzpOrderId) return res.json({ received: true })
+
+    const order = await Order.findOne({ razorpayOrderId: rzpOrderId })
+    if (!order) return res.json({ received: true, matched: false })
+
+    if (eventType === 'payment.captured') {
+      if (order.paymentStatus !== 'paid') {
+        order.paymentStatus = 'paid'
+        order.status = 'placed'
+        order.razorpayPaymentId = paymentEntity?.id || order.razorpayPaymentId
+        order.updatedAt = new Date()
+        if (await reReserveOrderStock(order)) order.stockRestored = false
+        await order.save()
+      }
+      return res.json({ received: true, orderNo: order.orderNo, status: 'paid' })
+    }
+
+    if (eventType === 'payment.failed') {
+      if (order.paymentStatus !== 'paid') {
+        order.paymentStatus = 'failed'
+        order.updatedAt = new Date()
+        await order.save()
+        await releaseOrderStock(order)
+      }
+      return res.json({ received: true, orderNo: order.orderNo, status: 'failed' })
+    }
+
+    res.json({ received: true, ignored: eventType })
+  } catch (err) {
+    console.error('Razorpay Webhook Error:', err)
+    res.status(500).json({ error: 'Webhook processing failed' })
   }
 })
 

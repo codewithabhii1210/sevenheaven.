@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { requireAuth, adminOnly } from '../middleware/auth.js'
 import { Order, Product, Coupon, ContactMessage, Newsletter, User } from '../models/index.js'
 import { sanitize } from '../middleware/sanitize.js'
+import { releaseOrderStock, reReserveOrderStock } from '../utils/stock.js'
 
 const router = Router()
 
@@ -97,8 +98,19 @@ router.patch('/orders/:id/status', async (req, res) => {
     const order = await Order.findByIdAndUpdate(req.params.id, update, { new: true })
     if (!order) return res.status(404).json({ error: 'Order not found' })
 
-    res.json({ success: true, order })
+    // Release reserved stock exactly once when order is cancelled or payment failed
+    const shouldRelease = order.status === 'cancelled' || order.paymentStatus === 'failed'
+    let stockRestored = false
+    if (shouldRelease) {
+      stockRestored = await releaseOrderStock(order)
+    } else if (order.paymentStatus === 'paid') {
+      // Revived after a previous release (e.g. failed → paid) — re-reserve stock
+      await reReserveOrderStock(order)
+    }
+
+    res.json({ success: true, order, stockRestored })
   } catch (err) {
+    console.error('Admin order status update error:', err)
     res.status(500).json({ error: 'Failed to update order status' })
   }
 })

@@ -89,6 +89,8 @@ const orderSchema = new Schema(
       default: 'pending',
     },
     razorpayOrderId: String,
+    razorpayPaymentId: String,
+    stockRestored: { type: Boolean, default: false }, // guards double stock restore on cancel/fail
     status: {
       type: String,
       enum: ['placed', 'packed', 'shipped', 'delivered', 'cancelled'],

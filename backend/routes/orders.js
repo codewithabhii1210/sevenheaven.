@@ -4,6 +4,7 @@ import { optionalAuth, requireAuth } from '../middleware/auth.js'
 import { sanitize } from '../middleware/sanitize.js'
 import { orderLimiter } from '../middleware/rateLimiter.js'
 import { connectDB } from '../db.js'
+import { reserveStock, releaseStock } from '../utils/stock.js'
 
 const router = Router()
 
@@ -164,32 +165,46 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       })
     }
 
+    // 8.2 Atomically reserve stock (conditional $inc — no negative stock under
+    // concurrent checkouts). Rolls back automatically if any item fails.
+    const reservation = await reserveStock(verifiedItems)
+    if (!reservation.ok) {
+      return res.status(400).json({ error: `Insufficient stock for product: ${reservation.failedName}` })
+    }
+
     // 9. Create order record
     const orderNo = generateOrderNo()
-    const order = await Order.create({
-      orderNo,
-      userId: req.auth?.id || null,
-      items: verifiedItems,
-      coupon: appliedCoupon,
-      subtotal,
-      discount,
-      shippingFee,
-      codFee,
-      total,
-      paymentMethod: cleanPayment,
-      paymentStatus: 'pending',
-      status: 'placed',
-      address: {
-        name: cleanName,
-        phone: cleanPhone,
-        email: cleanEmail,
-        line1: cleanLine1,
-        city: cleanCity,
-        state: cleanState,
-        pincode: cleanPincode,
-      },
-      placedAt: new Date(),
-    })
+    let order
+    try {
+      order = await Order.create({
+        orderNo,
+        userId: req.auth?.id || null,
+        items: verifiedItems,
+        coupon: appliedCoupon,
+        subtotal,
+        discount,
+        shippingFee,
+        codFee,
+        total,
+        paymentMethod: cleanPayment,
+        paymentStatus: 'pending',
+        status: 'placed',
+        address: {
+          name: cleanName,
+          phone: cleanPhone,
+          email: cleanEmail,
+          line1: cleanLine1,
+          city: cleanCity,
+          state: cleanState,
+          pincode: cleanPincode,
+        },
+        placedAt: new Date(),
+      })
+    } catch (createErr) {
+      // Never leak reserved stock if order record could not be written
+      await releaseStock(verifiedItems)
+      throw createErr
+    }
 
     // Auto-save delivery address to user's saved addresses in database for returning visits
     if (req.auth?.id) {
@@ -219,15 +234,9 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
       }
     }
 
-    // Deduct stock and increment coupon usage asynchronously
+    // Coupon usage increment (stock already reserved atomically above)
     if (appliedCoupon?.code) {
       await Coupon.updateOne({ code: appliedCoupon.code }, { $inc: { usedCount: 1 } })
-    }
-    for (const item of verifiedItems) {
-      await Product.updateOne(
-        { $or: [{ id: item.productId }, { slug: item.productId }] },
-        { $inc: { stock: -item.qty } }
-      )
     }
 
     res.status(201).json({
