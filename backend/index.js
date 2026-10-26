@@ -98,7 +98,9 @@ const corsOptions = {
     if (/^https:\/\/sevenheaven[a-z0-9-]*\.vercel\.app$/.test(origin)) return callback(null, true)
     if (/^http:\/\/localhost:\d+$/.test(origin)) return callback(null, true)
     if (/^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) return callback(null, true)
-    return callback(null, true) // dev fallback
+    // Reject unknown origins in production; allow-all fallback only for local dev
+    if (process.env.NODE_ENV !== 'production') return callback(null, true)
+    return callback(null, false)
   },
   credentials: true, // Allow cookies over CORS
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
