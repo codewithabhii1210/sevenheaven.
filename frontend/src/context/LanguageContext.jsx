@@ -40,7 +40,7 @@ const translations = {
     // Sections
     featuredCollection: 'Curated Elegance',
     featuredMainHeading: 'Beauty Beyond Imagination',
-    featuredSubtitle: 'Handcrafted fragrances and professional skin perfecting primer',
+    featuredSubtitle: 'Handcrafted luxury makeup and skincare',
     allProducts: 'All Creations',
     shopByOccasion: 'Shop by Occasion',
     reviewsTitle: 'Echoes of Luxury',
@@ -95,7 +95,7 @@ const translations = {
     // Sections
     featuredCollection: 'शाही संग्रह',
     featuredMainHeading: 'कल्पना से परे सौंदर्य',
-    featuredSubtitle: 'हाथों से तैयार परफ्यूम और पेशेवर स्किन ब्लर प्राइमर',
+    featuredSubtitle: 'हाथों से तैयार लक्ज़री मेकअप और स्किनकेयर',
     allProducts: 'सभी कृतियाँ',
     shopByOccasion: 'अवसर के अनुसार चुनें',
     reviewsTitle: 'ग्राहकों की आवाज़',

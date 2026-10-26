@@ -13,8 +13,8 @@ export default function About() {
             Beauty Beyond <span className="gold-gradient-text">Imagination</span>
           </h1>
           <p className="about-hero-sub">
-            Born in the heart of Bhopal, Seven Heaven is an artisanal Indian house of haute parfumerie
-            and complexion-perfecting cosmetics.
+            Born in the heart of Bhopal, Seven Heaven is an artisanal Indian house of luxury
+            makeup and skincare.
           </p>
           <div className="gold-divider-center" />
         </div>
@@ -26,8 +26,8 @@ export default function About() {
           <div className="story-media-col">
             <div className="story-image-card">
               <img
-                src="/images/category-fragrance.jpg"
-                alt="Seven Heaven Fragrance Formulation Atelier"
+                src="/images/products/velvet-suede-lipstick-bhopal-nude.jpg"
+                alt="Seven Heaven Cosmetics — luxury makeup crafted in Bhopal"
                 className="story-img"
                 loading="lazy"
               />
@@ -42,14 +42,14 @@ export default function About() {
             <span className="eyebrow">OUR GENESIS</span>
             <h2 className="story-heading">Crafted in Bhopal, Celebrated Across India</h2>
             <p className="story-paragraph">
-              Seven Heaven Cosmetics was born from a singular conviction: that luxury beauty and high-sillage
-              perfumery should not remain an elusive privilege locked behind exorbitant international price tags.
+              Seven Heaven Cosmetics was born from a singular conviction: that luxury beauty
+              should not remain an elusive privilege locked behind exorbitant international price tags.
             </p>
             <p className="story-paragraph">
               Founded in Bhopal by <strong>Radha, Devendra, and Vishal</strong>, Seven Heaven harmonizes
-              time-tested Indian botanicals with refined French-Middle Eastern extraction techniques. From our
-              flagship <em>Invisible Blur Primer</em> engineered specifically for tropical Indian skin, to rich,
-              resinous <em>Golden Oud</em>, every creation represents obsessive dedication to purity and longevity.
+              time-tested Indian botanicals with refined cosmetic formulation science. From our
+              flagship <em>Invisible Blur Primer</em> engineered specifically for tropical Indian skin, to
+              richly pigmented lip colours and nourishing lip care, every creation represents obsessive dedication to purity and performance.
             </p>
             <div className="story-quote-card">
               <p className="founder-quote">
@@ -89,8 +89,8 @@ export default function About() {
               </div>
               <h3 className="pillar-title">2. Craftsmanship (शिल्पकला)</h3>
               <p className="pillar-desc">
-                Small-batch distillation and controlled maturation ensure each bottle of Eau de Parfum delivers
-                8 to 12 hours of projection tailored to thrive in Indian climates.
+                Small-batch production and strict quality control ensure every shade and formula
+                performs beautifully through Indian heat, humidity, and long days.
               </p>
             </div>
 
@@ -134,7 +134,7 @@ export default function About() {
               <ArrowRight size={16} />
             </Link>
             <Link to="/shop" className="btn btn-gold-outline btn-lg">
-              <span>Explore All Perfumes</span>
+              <span>Explore All Products</span>
             </Link>
           </div>
         </div>

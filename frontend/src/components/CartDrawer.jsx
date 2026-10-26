@@ -100,7 +100,7 @@ export default function CartDrawer() {
               </div>
               <h3 className="empty-cart-title">{t('emptyCart')}</h3>
               <p className="empty-cart-desc">
-                Indulge in our exquisite collection of long-lasting perfumes and skin-perfecting primer.
+                Explore our luxury makeup and skincare collection to fill your bag.
               </p>
               <Link
                 to="/shop"

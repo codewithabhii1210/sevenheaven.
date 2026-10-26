@@ -62,8 +62,8 @@ export default function Cart() {
           </div>
           <h1 className="empty-cart-heading">{t('emptyCart')}</h1>
           <p className="empty-cart-text">
-            Your shopping bag awaits your discerning choice. Discover our long-lasting perfumes
-            and the acclaimed Invisible Blur Primer.
+            Your shopping bag awaits your discerning choice. Explore our luxury makeup
+            and skincare collection.
           </p>
           <Link to="/shop" className="btn btn-gold btn-lg">
             <span>{t('exploreShop')}</span>

@@ -90,7 +90,7 @@ const POLICIES = {
     sections: [
       {
         heading: 'Products & Pricing',
-        body: 'All prices are listed in Indian Rupees (₹) and include GST. Product colours may vary slightly from screen to screen due to display calibration — our handcrafted batches also vary naturally in shade and fragrance depth.',
+        body: 'All prices are listed in Indian Rupees (₹) and include GST. Product colours may vary slightly from screen to screen due to display calibration — our handcrafted batches also vary naturally in shade.',
       },
       {
         heading: 'Orders',
@@ -102,7 +102,7 @@ const POLICIES = {
       },
       {
         heading: 'Returns & Refunds',
-        body: 'For hygiene reasons, opened cosmetics and perfumes cannot be returned. Unopened, sealed products in original condition may be reported within 7 days of delivery for replacement or refund after quality inspection.',
+        body: 'For hygiene reasons, opened cosmetics cannot be returned. Unopened, sealed products in original condition may be reported within 7 days of delivery for replacement or refund after quality inspection.',
       },
       {
         heading: 'Contact',

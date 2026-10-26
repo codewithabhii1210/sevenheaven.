@@ -43,8 +43,8 @@ export default function Contact() {
       a: 'Yes. Our primer is completely non-comedogenic, oil-free, and formulated with sebum-regulating microspheres. It blurs enlarged pores without clogging, making it ideal for tropical Indian climates.',
     },
     {
-      q: 'How long does Seven Heaven Eau de Parfum last?',
-      a: 'Our fragrances are formulated at generous Eau de Parfum concentrations (18–22% perfume oil). They typically project for 8 to 12 hours depending on skin chemistry and pulse point application.',
+      q: 'How long does Seven Heaven lipstick stay on?',
+      a: 'Our Velvet Suede lipsticks are formulated for 12-hour comfortable wear — a non-drying matte that resists transfer through meals and drinks. Reapply after oily meals for a fresh finish.',
     },
   ]
 
@@ -254,7 +254,7 @@ export default function Contact() {
                     onChange={handleChange}
                     className="text-input select-input"
                   >
-                    <option value="Product Inquiry">Product Inquiry (Primer / Perfumes)</option>
+                    <option value="Product Inquiry">Product Inquiry (Makeup / Skincare)</option>
                     <option value="Order Tracking">Order Status & Tracking</option>
                     <option value="Cash on Delivery">Cash on Delivery (COD) Assistance</option>
                     <option value="Corporate Gifting">Corporate & Bespoke Gifting</option>

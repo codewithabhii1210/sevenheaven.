@@ -18,8 +18,8 @@ export default function Wishlist() {
           </div>
           <h1 className="empty-heading">Your Wishlist is Empty</h1>
           <p className="empty-text">
-            You haven&apos;t saved any Seven Heaven creations yet. Explore our artisanal perfumes
-            and the acclaimed Invisible Blur Primer to curate your personal archive.
+            You haven&apos;t saved any Seven Heaven creations yet. Explore our luxury makeup
+            and skincare to curate your personal archive.
           </p>
           <Link to="/shop" className="btn btn-gold btn-lg">
             <span>{t('exploreShop')}</span>

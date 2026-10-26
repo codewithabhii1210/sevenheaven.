@@ -428,7 +428,7 @@ export default function Checkout() {
           amount: rzpOrderData.amount,
           currency: rzpOrderData.currency || 'INR',
           name: 'Seven Heaven Cosmetics',
-          description: `Order ${orderNo} — Luxury Beauty & Fragrance`,
+          description: `Order ${orderNo} — Luxury Beauty & Cosmetics`,
           image: '/images/logo-seven-heaven.png',
           order_id: rzpOrderData.razorpayOrderId,
           prefill: {
