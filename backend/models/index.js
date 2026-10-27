@@ -154,9 +154,21 @@ const newsletterSchema = new Schema(
   { timestamps: true }
 )
 
+// ---------------- Rate Limit Counters (persistent, shared across serverless instances) ----------------
+// Written by middleware/mongoRateLimitStore.js. bucketKey embeds the fixed
+// window start (e.g. "auth:1.2.3.4:1793120000000"); the TTL index deletes
+// buckets automatically shortly after their window closes.
+const rateLimitSchema = new Schema({
+  bucketKey: { type: String, required: true, unique: true },
+  count: { type: Number, required: true, default: 0 },
+  expiresAt: { type: Date, required: true },
+})
+rateLimitSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 })
+
 export const Product = model('Product', productSchema)
 export const Coupon = model('Coupon', couponSchema)
 export const Order = model('Order', orderSchema)
 export const User = model('User', userSchema)
 export const ContactMessage = model('ContactMessage', contactSchema)
 export const Newsletter = model('Newsletter', newsletterSchema)
+export const RateLimit = model('RateLimit', rateLimitSchema)
