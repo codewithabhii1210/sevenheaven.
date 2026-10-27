@@ -467,6 +467,45 @@ export default function Account() {
   // STANDALONE ORDER DETAILS VIEW (/order/:orderNo)
   // ============================================================
   if (routeOrderNo) {
+    // Guest → login required notice for THIS order (Flipkart-style policy)
+    if (!isAuthenticated) {
+      return (
+        <div className="container" style={{ padding: '3.5rem 0 5rem' }}>
+          <div style={{ maxWidth: '640px', margin: '0 auto' }}>
+            <div className="orders-empty-card" style={{ textAlign: 'center' }}>
+              <Lock size={44} className="gold-text" />
+              <h3>Sign In to View Your Order</h3>
+              <p>
+                Order <strong>{routeOrderNo}</strong> is linked to an account. Sign in to
+                inspect complete order details and live dispatch progress.
+              </p>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '0.75rem',
+                  justifyContent: 'center',
+                  marginTop: '1.25rem',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <Link
+                  to={`/my-account?tab=login&redirect=/order/${routeOrderNo}`}
+                  className="btn btn-gold btn-sm"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to={`/my-account?tab=register&redirect=/order/${routeOrderNo}`}
+                  className="btn btn-gold-outline btn-sm"
+                >
+                  Create Account
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
     return (
       <div className="container" style={{ padding: '3.5rem 0 5rem' }}>
         <div style={{ maxWidth: '820px', margin: '0 auto' }}>
@@ -1106,16 +1145,10 @@ export default function Account() {
           <div className="auth-header">
             <span className="auth-eyebrow">SEVEN HEAVEN CONCIERGE</span>
             <h1 className="auth-title">
-              {routeOrderNo
-                ? 'Sign In to View Your Order'
-                : authTab === 'login'
-                ? 'Patron Sign In'
-                : 'Join The VIP Circle'}
+              {authTab === 'login' ? 'Patron Sign In' : 'Join The VIP Circle'}
             </h1>
             <p className="auth-subtitle">
-              {routeOrderNo
-                ? `Order ${routeOrderNo} is linked to an account. Sign in to inspect complete order details and live dispatch progress.`
-                : authTab === 'login'
+              {authTab === 'login'
                 ? 'Access your private order history, tracking details, and saved wishlist.'
                 : 'Register for private reserve access, 10% inaugural discount, and VIP concierge.'}
             </p>
