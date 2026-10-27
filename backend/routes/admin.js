@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { requireAuth, adminOnly } from '../middleware/auth.js'
-import { Order, Product, Coupon, ContactMessage, Newsletter, User } from '../models/index.js'
+import { Order, Product, ContactMessage, Newsletter, User } from '../models/index.js'
 import { sanitize } from '../middleware/sanitize.js'
 import { releaseOrderStock, reReserveOrderStock } from '../utils/stock.js'
 

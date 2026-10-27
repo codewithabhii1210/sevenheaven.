@@ -61,7 +61,6 @@ export default function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState(null)
   const [isAddingNewAddress, setIsAddingNewAddress] = useState(false)
   const [editingAddressId, setEditingAddressId] = useState(null)
-  const [addressLoading, setAddressLoading] = useState(false)
 
   // Address Form State (used for adding / editing addresses)
   const [addressForm, setAddressForm] = useState({
@@ -97,7 +96,6 @@ export default function Checkout() {
   // Fetch saved addresses if authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      setAddressLoading(true)
       api
         .getAddresses()
         .then((addrs) => {
@@ -117,9 +115,6 @@ export default function Checkout() {
         })
         .catch((err) => {
           console.warn('Failed to load saved addresses:', err.message)
-        })
-        .finally(() => {
-          setAddressLoading(false)
         })
     }
   }, [isAuthenticated, user])
@@ -280,7 +275,7 @@ export default function Checkout() {
     if (isSubmitting) return
 
     // 1. Gather delivery address (login is mandatory — see login wall above)
-    let orderAddress = null
+    let orderAddress // both branches below assign it (or return early)
     if (savedAddresses.length > 0 && !isAddingNewAddress && !editingAddressId) {
       if (!activeSelectedAddress) {
         showToast('Please select a delivery address', 'info')
@@ -464,7 +459,7 @@ export default function Checkout() {
             <strong className="order-no-val">{confirmedOrder.orderNo}</strong>
             <span className="order-date">
               Placed on{' '}
-              {new Date(confirmedOrder.placedAt || Date.now()).toLocaleDateString('en-IN', {
+              {new Date(confirmedOrder.placedAt || confirmedOrder.createdAt).toLocaleDateString('en-IN', {
                 month: 'long',
                 day: 'numeric',
                 year: 'numeric',

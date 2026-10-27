@@ -184,7 +184,7 @@ app.use((req, res, next) => {
 })
 
 // Global Error Handler — never leaks stack traces or system paths to clients
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   console.error('[UNHANDLED SERVER ERROR]:', err)
   res.status(err.status || 500).json({
     error: isProd ? 'An internal error occurred. Please try again.' : err.message || 'Internal Server Error',

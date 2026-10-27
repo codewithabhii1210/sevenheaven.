@@ -2,11 +2,6 @@ import { products as localProducts } from '../data/products.js'
 import { findCoupon as localFindCoupon } from '../data/coupons.js'
 
 const isBrowser = typeof window !== 'undefined'
-const isLocalhost =
-  isBrowser &&
-  (window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname.endsWith('.local'))
 
 // In browser production/mobile, ALWAYS use relative path '' so requests go to current origin /api/...
 // In local dev, relative path '' is proxied by Vite to the backend port.
@@ -41,7 +36,8 @@ async function request(endpoint, options = {}) {
     throw new Error(
       netErr.message === 'Failed to fetch' || netErr.message === 'fetch failed'
         ? 'Unable to connect to order server. Please verify your internet or try again.'
-        : netErr.message || 'Network request failed'
+        : netErr.message || 'Network request failed',
+      { cause: netErr }
     )
   }
 
@@ -97,7 +93,7 @@ export const api = {
     } catch (err) {
       // Local fallback calculation
       const c = localFindCoupon(code)
-      if (!c) throw new Error('Invalid coupon code')
+      if (!c) throw new Error('Invalid coupon code', { cause: err })
       let discount = 0
       if (c.type === 'percent') {
         discount = Math.round((subtotal * c.value) / 100)

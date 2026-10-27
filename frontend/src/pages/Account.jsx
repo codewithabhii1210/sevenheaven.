@@ -340,7 +340,7 @@ export default function Account() {
           </h2>
           <span className="order-modal-date">
             Placed on{' '}
-            {new Date(ord.placedAt || ord.createdAt || Date.now()).toLocaleDateString('en-IN', {
+            {new Date(ord.placedAt || ord.createdAt).toLocaleDateString('en-IN', {
               month: 'long',
               day: 'numeric',
               year: 'numeric',
@@ -657,7 +657,7 @@ export default function Account() {
                           <span className="order-no-title">{ord.orderNo}</span>
                           <span className="order-date-text">
                             Placed on{' '}
-                            {new Date(ord.placedAt || ord.createdAt || Date.now()).toLocaleDateString('en-IN', {
+                            {new Date(ord.placedAt || ord.createdAt).toLocaleDateString('en-IN', {
                               month: 'short',
                               day: 'numeric',
                               year: 'numeric',
