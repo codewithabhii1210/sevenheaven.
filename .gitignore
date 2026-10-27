@@ -29,3 +29,7 @@ yarn-error.log*
 
 # Local audit/verification scripts (may reference env credentials)
 scripts/
+
+# Playwright artifacts
+test-results/
+playwright-report/
