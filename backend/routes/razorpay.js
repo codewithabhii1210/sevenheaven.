@@ -4,10 +4,20 @@ import Razorpay from 'razorpay'
 import { Order } from '../models/index.js'
 import { sanitize } from '../middleware/sanitize.js'
 import { orderLimiter } from '../middleware/rateLimiter.js'
+import { requireAuth } from '../middleware/auth.js'
 import { connectDB } from '../db.js'
 import { releaseOrderStock, reReserveOrderStock } from '../utils/stock.js'
 
 const router = Router()
+
+// A logged-in requester may only touch an order they own (or, for admin, any
+// order). Matches by userId, or by the order's email for legacy/guest-era orders.
+function requesterOwnsOrder(req, order) {
+  if (req.auth.role === 'admin') return true
+  if (order.userId && order.userId.toString() === req.auth.id) return true
+  const requesterEmail = req.auth.email ? req.auth.email.toLowerCase() : ''
+  return !!requesterEmail && order.address?.email?.toLowerCase() === requesterEmail
+}
 
 // Helper to initialize Razorpay with current keys
 function getRazorpayInstance() {
@@ -19,7 +29,7 @@ function getRazorpayInstance() {
 
 // POST /api/razorpay/create-order
 // Rate-limited and sanitized order initiation
-router.post('/create-order', orderLimiter, async (req, res) => {
+router.post('/create-order', orderLimiter, requireAuth, async (req, res) => {
   try {
     await connectDB()
     const rawOrderNo = sanitize.string(req.body?.orderNo, 40)
@@ -29,6 +39,11 @@ router.post('/create-order', orderLimiter, async (req, res) => {
 
     const order = await Order.findOne({ orderNo: rawOrderNo })
     if (!order) {
+      return res.status(404).json({ error: 'Order not found' })
+    }
+
+    // Only the order's owner (or an admin) may initiate its payment
+    if (!requesterOwnsOrder(req, order)) {
       return res.status(404).json({ error: 'Order not found' })
     }
 
@@ -154,7 +169,7 @@ router.post('/verify', async (req, res) => {
 // POST /api/razorpay/payment-failed
 // Client reports a failed payment attempt (widget payment.failed event).
 // Marks order failed + releases reserved stock exactly once (idempotent).
-router.post('/payment-failed', orderLimiter, async (req, res) => {
+router.post('/payment-failed', orderLimiter, requireAuth, async (req, res) => {
   try {
     await connectDB()
     const orderNo = sanitize.string(req.body?.orderNo, 40)
@@ -162,6 +177,11 @@ router.post('/payment-failed', orderLimiter, async (req, res) => {
 
     const order = await Order.findOne({ orderNo })
     if (!order) return res.status(404).json({ error: 'Order not found' })
+
+    // Only the order's owner (or an admin) may report its payment failure
+    if (!requesterOwnsOrder(req, order)) {
+      return res.status(404).json({ error: 'Order not found' })
+    }
 
     // Never touch an order that already succeeded
     if (order.paymentStatus === 'paid') {

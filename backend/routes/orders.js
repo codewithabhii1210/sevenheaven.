@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { Order, Product, Coupon, User } from '../models/index.js'
-import { optionalAuth, requireAuth } from '../middleware/auth.js'
+import { requireAuth } from '../middleware/auth.js'
 import { sanitize } from '../middleware/sanitize.js'
 import { orderLimiter } from '../middleware/rateLimiter.js'
 import { connectDB } from '../db.js'
@@ -19,7 +19,10 @@ function generateOrderNo() {
 }
 
 // POST /api/orders — Secure order creation with strict input validation & rate limiting
-router.post('/', orderLimiter, optionalAuth, async (req, res) => {
+// Flipkart-style policy: placing an order requires a logged-in account.
+// Guest browsing & cart are open, but checkout (POST) mandates auth so every
+// order is tied to a real account (reduces fake/COD-abuse orders).
+router.post('/', orderLimiter, requireAuth, async (req, res) => {
   try {
     await connectDB()
     const { items, address, paymentMethod, couponCode } = req.body || {}
@@ -147,10 +150,7 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
 
     // 8.1 Prevent duplicate order creation on rapid double clicks (10s window)
     const recentDuplicate = await Order.findOne({
-      $or: [
-        ...(req.auth?.id ? [{ userId: req.auth.id }] : []),
-        { 'address.phone': cleanPhone },
-      ],
+      $or: [{ userId: req.auth.id }, { 'address.phone': cleanPhone }],
       paymentMethod: cleanPayment,
       total,
       createdAt: { $gte: new Date(Date.now() - 10000) },
@@ -178,7 +178,7 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
     try {
       order = await Order.create({
         orderNo,
-        userId: req.auth?.id || null,
+        userId: req.auth.id,
         items: verifiedItems,
         coupon: appliedCoupon,
         subtotal,
@@ -207,31 +207,29 @@ router.post('/', orderLimiter, optionalAuth, async (req, res) => {
     }
 
     // Auto-save delivery address to user's saved addresses in database for returning visits
-    if (req.auth?.id) {
-      try {
-        const u = await User.findById(req.auth.id)
-        if (u) {
-          const hasMatching = (u.addresses || []).some(
-            (a) => a.pincode === cleanPincode && a.line1.toLowerCase() === cleanLine1.toLowerCase()
-          )
-          if (!hasMatching) {
-            const isFirst = !u.addresses || u.addresses.length === 0
-            u.addresses.push({
-              name: cleanName,
-              phone: cleanPhone,
-              line1: cleanLine1,
-              city: cleanCity,
-              state: cleanState,
-              pincode: cleanPincode,
-              type: 'Home',
-              isDefault: isFirst,
-            })
-            await u.save()
-          }
+    try {
+      const u = await User.findById(req.auth.id)
+      if (u) {
+        const hasMatching = (u.addresses || []).some(
+          (a) => a.pincode === cleanPincode && a.line1.toLowerCase() === cleanLine1.toLowerCase()
+        )
+        if (!hasMatching) {
+          const isFirst = !u.addresses || u.addresses.length === 0
+          u.addresses.push({
+            name: cleanName,
+            phone: cleanPhone,
+            line1: cleanLine1,
+            city: cleanCity,
+            state: cleanState,
+            pincode: cleanPincode,
+            type: 'Home',
+            isDefault: isFirst,
+          })
+          await u.save()
         }
-      } catch (addrErr) {
-        console.warn('Address auto-save warning:', addrErr.message)
       }
+    } catch (addrErr) {
+      console.warn('Address auto-save warning:', addrErr.message)
     }
 
     // Coupon usage increment (stock already reserved atomically above)
@@ -273,47 +271,28 @@ router.get('/my', requireAuth, async (req, res) => {
   }
 })
 
-// GET /api/orders/:orderNo — Single order lookup.
-// Order numbers are guessable (SH-YYMMDD-XXXX), so PII is only returned to
-// the order's owner or an admin. Anonymous/guest lookups get a masked copy
-// (status, items, totals + partial address) with no name/phone/email/street.
-router.get('/:orderNo', optionalAuth, async (req, res) => {
+// GET /api/orders/:orderNo — Single order lookup (Flipkart-style: login required).
+// Order numbers are guessable (SH-YYMMDD-XXXX), so the endpoint requires a
+// logged-in session AND returns full details only to the order's owner or an
+// admin. A logged-in user probing someone else's orderNo gets 404 (no PII leak,
+// no existence oracle).
+router.get('/:orderNo', requireAuth, async (req, res) => {
   try {
     await connectDB()
     const cleanOrderNo = sanitize.string(req.params.orderNo, 40)
     const order = await Order.findOne({ orderNo: cleanOrderNo }).lean()
     if (!order) return res.status(404).json({ error: 'Order not found' })
 
-    const requesterEmail = req.auth?.email ? req.auth.email.toLowerCase() : ''
+    const requesterEmail = req.auth.email ? req.auth.email.toLowerCase() : ''
     const isOwner =
-      req.auth &&
-      (req.auth.role === 'admin' ||
-        (order.userId && order.userId.toString() === req.auth.id) ||
-        (requesterEmail && order.address?.email?.toLowerCase() === requesterEmail))
+      req.auth.role === 'admin' ||
+      (order.userId && order.userId.toString() === req.auth.id) ||
+      (requesterEmail && order.address?.email?.toLowerCase() === requesterEmail)
 
-    if (isOwner) return res.json({ order })
+    // Non-owner, non-admin: behave as if the order does not exist.
+    if (!isOwner) return res.status(404).json({ error: 'Order not found' })
 
-    // Masked guest view: keep tracking useful, hide identity & exact address
-    const maskName = (n) =>
-      n ? n.trim().charAt(0).toUpperCase() + '•'.repeat(Math.max(2, Math.min(8, n.trim().length - 1))) : ''
-    const maskPhone = (p) => (p ? '•••••' + String(p).slice(-4) : '')
-
-    res.json({
-      order: {
-        ...order,
-        userId: undefined,
-        address: {
-          name: maskName(order.address?.name),
-          line1: '',
-          city: order.address?.city || '',
-          state: order.address?.state || '',
-          pincode: order.address?.pincode || '',
-          phone: maskPhone(order.address?.phone),
-          email: '',
-        },
-      },
-      masked: true,
-    })
+    return res.json({ order })
   } catch (err) {
     console.error('Fetch single order error:', err)
     res.status(500).json({ error: 'Failed to fetch order details' })

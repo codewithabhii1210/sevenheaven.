@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useSearchParams, useParams } from 'react-router-dom'
+import { Link, useSearchParams, useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { api } from '../services/api.js'
@@ -32,11 +32,24 @@ import {
 export default function Account() {
   const [searchParams] = useSearchParams()
   const { orderNo: routeOrderNo } = useParams()
+  const navigate = useNavigate()
   const { user, isAuthenticated, isAdmin, login, register, logout, loading } = useAuth()
   const { showToast } = useToast()
 
-  // Tabs for guest: 'login' | 'register' | 'track'
-  const [authTab, setAuthTab] = useState(routeOrderNo ? 'track' : 'login')
+  // After a successful login/register, return the patron to where they came
+  // from (e.g. /my-account?tab=login&redirect=/checkout). Only same-site
+  // absolute paths are honored — blocks open-redirect abuse.
+  const redirectTarget = (() => {
+    const r = searchParams.get('redirect')
+    if (r && r.startsWith('/') && !r.startsWith('//') && !r.startsWith('/\\')) return r
+    return null
+  })()
+
+  // Tabs for guest: 'login' | 'register'
+  // (order tracking requires a logged-in account — Flipkart-style policy)
+  const [authTab, setAuthTab] = useState(
+    routeOrderNo || searchParams.get('tab') !== 'register' ? 'login' : 'register'
+  )
 
   // Tabs for logged in user: 'orders' | 'profile' | 'track'
   const [activeTab, setActiveTab] = useState(
@@ -107,13 +120,14 @@ export default function Account() {
     }
   }
 
-  // If route has orderNo, automatically look up that order
+  // If route has orderNo, automatically look up that order (logged-in only —
+  // guests hit the login wall below and look up after signing in)
   useEffect(() => {
-    if (routeOrderNo) {
+    if (routeOrderNo && isAuthenticated) {
       setTrackInput(routeOrderNo)
       handleLookupOrder(routeOrderNo)
     }
-  }, [routeOrderNo])
+  }, [routeOrderNo, isAuthenticated])
 
   // Fetch orders and addresses when logged in
   useEffect(() => {
@@ -265,6 +279,8 @@ export default function Account() {
     }
     try {
       await login(loginEmail.trim(), loginPassword)
+      // Return to checkout (or wherever the patron came from) after sign-in
+      if (redirectTarget) navigate(redirectTarget, { replace: true })
     } catch {
       // Error handled inside AuthContext
     }
@@ -296,6 +312,8 @@ export default function Account() {
         phone: regPhone.trim(),
         password: regPassword,
       })
+      // Return to checkout (or wherever the patron came from) after signup
+      if (redirectTarget) navigate(redirectTarget, { replace: true })
     } catch {
       // Error handled inside AuthContext
     }
@@ -1088,18 +1106,18 @@ export default function Account() {
           <div className="auth-header">
             <span className="auth-eyebrow">SEVEN HEAVEN CONCIERGE</span>
             <h1 className="auth-title">
-              {authTab === 'login'
+              {routeOrderNo
+                ? 'Sign In to View Your Order'
+                : authTab === 'login'
                 ? 'Patron Sign In'
-                : authTab === 'register'
-                ? 'Join The VIP Circle'
-                : 'Track Order Details'}
+                : 'Join The VIP Circle'}
             </h1>
             <p className="auth-subtitle">
-              {authTab === 'login'
+              {routeOrderNo
+                ? `Order ${routeOrderNo} is linked to an account. Sign in to inspect complete order details and live dispatch progress.`
+                : authTab === 'login'
                 ? 'Access your private order history, tracking details, and saved wishlist.'
-                : authTab === 'register'
-                ? 'Register for private reserve access, 10% inaugural discount, and VIP concierge.'
-                : 'Inspect complete order details and live dispatch progress with your Order Number.'}
+                : 'Register for private reserve access, 10% inaugural discount, and VIP concierge.'}
             </p>
 
             {/* Auth Tab Switcher */}
@@ -1117,13 +1135,6 @@ export default function Account() {
                 className={`tab-btn ${authTab === 'register' ? 'active' : ''}`}
               >
                 New Patron
-              </button>
-              <button
-                type="button"
-                onClick={() => setAuthTab('track')}
-                className={`tab-btn ${authTab === 'track' ? 'active' : ''}`}
-              >
-                Track Order
               </button>
             </div>
           </div>
@@ -1258,48 +1269,6 @@ export default function Account() {
                 <ArrowRight size={16} />
               </button>
             </form>
-          )}
-
-          {/* GUEST ORDER TRACKING / LOOKUP */}
-          {authTab === 'track' && (
-            <div className="auth-form guest-track-form">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  handleLookupOrder()
-                }}
-              >
-                <div className="field-group">
-                  <label className="field-label">Enter Seven Heaven Order Number</label>
-                  <div className="input-with-icon">
-                    <Search size={16} className="input-icon" />
-                    <input
-                      type="text"
-                      value={trackInput}
-                      onChange={(e) => setTrackInput(e.target.value)}
-                      placeholder="e.g. SH-261017-7484"
-                      className="text-input"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={trackLoading}
-                  className="btn btn-gold btn-block btn-lg"
-                >
-                  <span>{trackLoading ? 'Searching Archive...' : 'Look Up Order Details'}</span>
-                  <ArrowRight size={16} />
-                </button>
-              </form>
-
-              {trackedOrder && (
-                <div style={{ marginTop: '1.5rem' }}>
-                  {renderOrderDetailsCard(trackedOrder)}
-                </div>
-              )}
-            </div>
           )}
         </div>
       </div>
